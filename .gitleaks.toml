@@ -1,4 +1,6 @@
 # Gitleaks config — extends the default ruleset.
+# Uses the legacy singular [allowlist] table: the plural [[allowlists]] form
+# only exists from gitleaks 8.25, and older versions ignore it silently.
 [extend]
 useDefault = true
 
@@ -6,7 +8,7 @@ useDefault = true
 # necessarily contain secret-shaped patterns, and the demo fixtures carry
 # deliberately fake credentials (AWS documentation example keys etc.) that the
 # detection pipeline is supposed to catch on stage.
-[[allowlists]]
+[allowlist]
 description = "detection rules and synthetic demo fixtures"
 paths = [
   '''detection-svc/rules/.*''',
