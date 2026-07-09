@@ -1,0 +1,132 @@
+openapi: 3.1.0
+info:
+  title: ZealDefense AI Sentinel — Risk Graph API
+  version: 0.1.0
+  description: >
+    Neo4j-backed risk graph. Nodes: User, Prompt, Model, Agent, Tool, Dataset, Violation.
+    Relationships: USED, ACCESSED, GENERATED, EXPOSED. Exposes a small set of named,
+    parameterized queries (no arbitrary Cypher over the wire) including the demo query
+    "all users who uploaded PHI to unauthorized AI systems" (Brief §6).
+servers:
+  - url: http://localhost:8085
+    description: Graph service (compose path)
+tags:
+  - name: graph
+security:
+  - oidc: []
+paths:
+  /healthz:
+    get:
+      operationId: graphHealth
+      tags: [graph]
+      summary: Liveness probe
+      responses:
+        '200':
+          description: Healthy
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+  /graph/queries:
+    get:
+      operationId: listNamedQueries
+      tags: [graph]
+      summary: List available named graph queries
+      responses:
+        '200':
+          description: Named queries
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/NamedQuery' }
+  /graph/query/{name}:
+    post:
+      operationId: runNamedQuery
+      tags: [graph]
+      summary: Execute a named, parameterized graph query
+      parameters:
+        - { name: name, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              description: Query parameters
+      responses:
+        '200':
+          description: Query result (rows + a renderable subgraph)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GraphResult' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    oidc:
+      type: openIdConnect
+      # Keycloak/OIDC (Brief auth stack). Realm deployed on the Helm path (Phase 5);
+      # on the compose demo path the gateway terminates auth in front of services.
+      openIdConnectUrl: http://localhost:8080/realms/ai-sentinel/.well-known/openid-configuration
+  responses:
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [ok] }
+        service: { type: string }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+        detail: { type: string }
+    NamedQuery:
+      type: object
+      required: [name, description, cypher]
+      properties:
+        name: { type: string, example: phi-to-unauthorized-ai }
+        description: { type: string }
+        cypher: { type: string, description: The exact Cypher executed (shown in UI for authenticity) }
+        parameters:
+          type: array
+          items: { type: string }
+    GraphResult:
+      type: object
+      required: [rows, nodes, edges]
+      properties:
+        rows:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        nodes:
+          type: array
+          items: { $ref: '#/components/schemas/GraphNode' }
+        edges:
+          type: array
+          items: { $ref: '#/components/schemas/GraphEdge' }
+        cypher: { type: string }
+    GraphNode:
+      type: object
+      required: [id, label]
+      properties:
+        id: { type: string }
+        label: { type: string, enum: [User, Prompt, Model, Agent, Tool, Dataset, Violation] }
+        properties:
+          type: object
+          additionalProperties: true
+    GraphEdge:
+      type: object
+      required: [source, target, type]
+      properties:
+        source: { type: string }
+        target: { type: string }
+        type: { type: string, enum: [USED, ACCESSED, GENERATED, EXPOSED] }

@@ -1,0 +1,139 @@
+openapi: 3.1.0
+info:
+  title: ZealDefense AI Sentinel — Discovery API
+  version: 0.1.0
+  description: >
+    Shadow-AI discovery. Ingests SIMULATED telemetry events (browser ext, DNS, proxy,
+    endpoint — all synthetic, see Brief R4) and records discovered AI usage.
+    There are NO live integrations; every ingested event carries a `simulated: true` flag.
+  contact:
+    name: ZealDefense Engineering
+servers:
+  - url: http://localhost:8081
+    description: Discovery service (compose path)
+tags:
+  - name: discovery
+security:
+  - oidc: []
+paths:
+  /healthz:
+    get:
+      operationId: discoveryHealth
+      tags: [discovery]
+      summary: Liveness probe
+      responses:
+        '200':
+          description: Service healthy
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+  /discover/events:
+    post:
+      operationId: ingestDiscoveryEvent
+      tags: [discovery]
+      summary: Ingest a SIMULATED discovery telemetry event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DiscoveryEvent' }
+      responses:
+        '202':
+          description: Event accepted and queued for processing
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IngestAck' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    get:
+      operationId: listDiscoveryEvents
+      tags: [discovery]
+      summary: List recorded AI-usage discovery events
+      parameters:
+        - { name: provider, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 50, maximum: 500 } }
+      responses:
+        '200':
+          description: Events
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/DiscoveryEvent' }
+  /discover/inventory:
+    get:
+      operationId: getAiInventory
+      tags: [discovery]
+      summary: Aggregated inventory of discovered AI systems and usage counts
+      responses:
+        '200':
+          description: AI inventory
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AiInventoryItem' }
+components:
+  securitySchemes:
+    oidc:
+      type: openIdConnect
+      # Keycloak/OIDC (Brief auth stack). Realm deployed on the Helm path (Phase 5);
+      # on the compose demo path the gateway terminates auth in front of services.
+      openIdConnectUrl: http://localhost:8080/realms/ai-sentinel/.well-known/openid-configuration
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [ok] }
+        service: { type: string }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+        detail: { type: string }
+    IngestAck:
+      type: object
+      required: [eventId, accepted]
+      properties:
+        eventId: { type: string, format: uuid }
+        accepted: { type: boolean }
+    DiscoveryEvent:
+      type: object
+      required: [provider, userEmail, source, simulated, timestamp]
+      properties:
+        eventId: { type: string, format: uuid }
+        provider:
+          type: string
+          description: AI system observed
+          enum: [chatgpt, claude, gemini, copilot, deepseek, grok, perplexity, ollama, openwebui, mcp, browser-ext]
+        userEmail: { type: string, format: email }
+        source:
+          type: string
+          description: Synthetic telemetry source that surfaced this event
+          enum: [browser-ext, dns, proxy, endpoint]
+        action: { type: string, enum: [visit, upload, prompt, download] }
+        artifactName: { type: string, description: e.g. customer_database.csv }
+        bytes: { type: integer }
+        simulated:
+          type: boolean
+          const: true
+          description: ALWAYS true on the compose path — no live integrations (Brief R4)
+        timestamp: { type: string, format: date-time }
+    AiInventoryItem:
+      type: object
+      required: [provider, usageCount, sanctioned]
+      properties:
+        provider: { type: string }
+        usageCount: { type: integer }
+        uniqueUsers: { type: integer }
+        sanctioned: { type: boolean, description: Whether this AI system is on the allow-list }
+        firstSeen: { type: string, format: date-time }
+        lastSeen: { type: string, format: date-time }

@@ -1,0 +1,11 @@
+patient_id,patient_name,date_of_birth,ssn,mrn,icd10_diagnosis,diagnosis_description,medication,dosage,physician,notes
+P001,Alice Hartman,1968-04-12,321-54-9876,MRN-7741023,E11.9,Type 2 diabetes mellitus without complications,Metformin,500mg twice daily,Dr. Sandra Lee,Annual diagnosis review; prescription renewed
+P002,Brian Kowalski,1955-11-30,456-78-1234,MRN-7741024,I10,Essential (primary) hypertension,Lisinopril,10mg once daily,Dr. James Patel,Patient admitted for blood pressure monitoring
+P003,Carmen Ortiz,1979-06-22,567-89-2345,MRN-7741025,J45.20,Mild intermittent asthma uncomplicated,Albuterol inhaler,90mcg as needed,Dr. Rachel Kim,Discharge summary attached; follow-up in 3 months
+P004,David Nguyen,1942-02-08,678-90-3456,MRN-7741026,C34.10,Malignant neoplasm of upper lobe bronchus and lung,Carboplatin,AUC 5 IV every 3 weeks,Dr. Michael Torres,Oncology referral; chemotherapy initiated
+P005,Eleanor Simmons,1990-09-15,789-01-4567,MRN-7741027,F32.1,Major depressive disorder single episode moderate,Sertraline,50mg once daily,Dr. Amy Chen,Psychiatric treatment; prescription under review
+P006,Frank Delgado,1963-07-04,890-12-5678,MRN-7741028,N18.3,Chronic kidney disease stage 3,Amlodipine,5mg once daily,Dr. Paul Martinez,Nephrology referral; patient hospitalized for observation
+P007,Grace Thornton,1985-03-19,901-23-6789,MRN-7741029,M79.3,Panniculitis,Ibuprofen,400mg three times daily,Dr. Lisa Wang,Pathology report pending; patient discharged 2024-11-20
+P008,Henry Yamamoto,1971-12-28,012-34-7890,MRN-7741030,Z79.899,Other long-term (current) drug therapy,Warfarin,5mg once daily,Dr. Kevin Park,Admitted for anticoagulation management
+P009,Isabella Rossi,1958-08-01,123-45-0987,MRN-7741031,E78.5,Hyperlipidemia unspecified,Atorvastatin,20mg once daily,Dr. Fiona Black,Diagnosis confirmed via lipid panel; prognosis favorable
+P010,James Okafor,1947-05-17,234-56-1098,MRN-7741032,I25.10,Atherosclerotic heart disease of native coronary artery without angina pectoris,Aspirin,81mg once daily,Dr. Rachel Kim,Cardiac radiology ordered; hospitalized for observation

@@ -1,0 +1,155 @@
+# ============================================================================
+# ZealDefense AI Sentinel — values (Phase 5 Helm path)
+#
+# App-service images default to the locally built `ai-sentinel-<name>:latest`
+# (the exact names `docker compose build` produces) with imagePullPolicy: Never
+# because they are side-loaded into the cluster with `kind load docker-image`.
+# Datastores/OPA use the same upstream images as the compose path.
+#
+# Datastores run as single-replica Deployments on emptyDir volumes: this is a
+# DEMO cluster, not production HA. Data is lost when the pod is rescheduled.
+# ============================================================================
+
+namespace:
+  # The namespace is normally created by `helm install ... --create-namespace`,
+  # in which case it carries NO Pod Security Standards labels and the operator
+  # must label it (see NOTES.txt / the post-install command printed on install).
+  # Set manage=true to have the chart template the Namespace object itself with
+  # the PSS "restricted" enforce labels already applied — do NOT combine that
+  # with --create-namespace for the same name.
+  manage: false
+  name: ai-sentinel
+
+secrets:
+  # DEMO defaults — a production install MUST override both, e.g.:
+  #   helm install ... --set secrets.postgresPassword=... --set secrets.neo4jPassword=...
+  # Consumed via valueFrom/secretKeyRef; never rendered into ConfigMaps.
+  postgresPassword: sentinel_dev_pw
+  neo4jPassword: sentinel_dev_pw
+
+# ---------------------------------------------------------------------------
+# Datastores (single replica, emptyDir — demo only)
+# ---------------------------------------------------------------------------
+
+postgres:
+  image: postgres:16-alpine
+  imagePullPolicy: IfNotPresent
+  user: sentinel
+  database: sentinel
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 512Mi }
+
+redis:
+  image: redis:7-alpine
+  imagePullPolicy: IfNotPresent
+  resources:
+    requests: { cpu: 25m, memory: 32Mi }
+    limits: { cpu: 200m, memory: 128Mi }
+
+nats:
+  image: nats:2.10-alpine
+  imagePullPolicy: IfNotPresent
+  resources:
+    requests: { cpu: 25m, memory: 64Mi }
+    limits: { cpu: 200m, memory: 256Mi }
+
+neo4j:
+  image: neo4j:5-community
+  imagePullPolicy: IfNotPresent
+  # Compose parity: the entrypoint downloads the APOC plugin at startup, which
+  # needs outbound internet from the pod (egress is unrestricted; see the
+  # NetworkPolicy comments).
+  plugins: '["apoc"]'
+  resources:
+    requests: { cpu: 250m, memory: 768Mi }
+    limits: { cpu: "1", memory: 2Gi }
+
+# ---------------------------------------------------------------------------
+# Policy engine
+# ---------------------------------------------------------------------------
+
+opa:
+  # Pinned (not :latest): a wedged in-node pull of :latest left truncated layers that
+  # containerd kept re-using because the unpacked snapshot chain already existed; a
+  # distinct version tag forces a clean layer chain. Pinning is also §3.2 hygiene.
+  image: openpolicyagent/opa:1.18.2
+  imagePullPolicy: IfNotPresent
+  resources:
+    requests: { cpu: 25m, memory: 64Mi }
+    limits: { cpu: 200m, memory: 256Mi }
+
+# ---------------------------------------------------------------------------
+# Application services (locally built, `kind load`-ed — hence Never)
+# ---------------------------------------------------------------------------
+
+detectionSvc:
+  image: ai-sentinel-detection-svc:latest
+  imagePullPolicy: Never
+  # Python/FastAPI + spaCy + Presidio: heaviest service in the stack.
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { cpu: "1", memory: 1536Mi }
+
+discoverySvc:
+  image: ai-sentinel-discovery-svc:latest
+  imagePullPolicy: Never
+  resources:
+    requests: { cpu: 25m, memory: 32Mi }
+    limits: { cpu: 200m, memory: 128Mi }
+
+promptSvc:
+  image: ai-sentinel-prompt-svc:latest
+  imagePullPolicy: Never
+  resources:
+    requests: { cpu: 25m, memory: 32Mi }
+    limits: { cpu: 200m, memory: 128Mi }
+
+complianceSvc:
+  image: ai-sentinel-compliance-svc:latest
+  imagePullPolicy: Never
+  resources:
+    requests: { cpu: 25m, memory: 32Mi }
+    limits: { cpu: 200m, memory: 128Mi }
+
+agentSvc:
+  image: ai-sentinel-agent-svc:latest
+  imagePullPolicy: Never
+  resources:
+    requests: { cpu: 25m, memory: 32Mi }
+    limits: { cpu: 200m, memory: 128Mi }
+
+graphSvc:
+  image: ai-sentinel-graph-svc:latest
+  imagePullPolicy: Never
+  resources:
+    requests: { cpu: 25m, memory: 32Mi }
+    limits: { cpu: 200m, memory: 128Mi }
+
+copilotSvc:
+  image: ai-sentinel-copilot-svc:latest
+  imagePullPolicy: Never
+  # Deterministic OFFLINE RAG by default (Brief R3). Never set live=true on the
+  # demo path.
+  live: false
+  resources:
+    requests: { cpu: 25m, memory: 32Mi }
+    limits: { cpu: 200m, memory: 128Mi }
+
+telemetryGenerator:
+  image: ai-sentinel-telemetry-generator:latest
+  imagePullPolicy: Never
+  # Helm path runs in INGEST mode: the internal simulator is OFF and real Falco
+  # events arrive via falcosidekick HTTP webhook -> POST /runtime/events.
+  # (The compose path uses the default `simulate` mode instead.)
+  runtimeMode: ingest
+  resources:
+    requests: { cpu: 25m, memory: 32Mi }
+    limits: { cpu: 200m, memory: 128Mi }
+
+frontend:
+  image: ai-sentinel-frontend:latest
+  imagePullPolicy: Never
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 512Mi }

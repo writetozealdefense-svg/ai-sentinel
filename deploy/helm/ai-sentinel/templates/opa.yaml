@@ -1,0 +1,89 @@
+# ---------------------------------------------------------------------------
+# opa — policy engine, same args as compose; policy comes from the opa-policy
+# ConfigMap mounted read-only at /policy.
+#
+# securityContext: modern openpolicyagent/opa images are distroless and run as
+# uid/gid 1000 by default (the old -rootless variant was folded into the main
+# tag). Read-only root FS: OPA only reads /policy here.
+# ---------------------------------------------------------------------------
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: opa
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "opa") | nindent 4 }}
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opa
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "opa") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "ai-sentinel.selectorLabels" (dict "root" $ "component" "opa") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ai-sentinel.labels" (dict "root" $ "component" "opa") | nindent 8 }}
+    spec:
+      serviceAccountName: opa
+      automountServiceAccountToken: false
+      # No service-link env injection: a Service named e.g. "neo4j" would inject
+      # NEO4J_PORT_* vars that the neo4j entrypoint fatally misparses as config.
+      enableServiceLinks: false
+      securityContext:
+        {{- include "ai-sentinel.podSecurityContext" (dict) | nindent 8 }}
+      containers:
+        - name: opa
+          image: {{ .Values.opa.image }}
+          imagePullPolicy: {{ .Values.opa.imagePullPolicy }}
+          securityContext:
+            {{- include "ai-sentinel.containerSecurityContext" (dict "uid" 1000 "readOnlyRootFilesystem" true) | nindent 12 }}
+          # Same args as the compose path.
+          args: ["run", "--server", "--addr=0.0.0.0:8181", "--log-level=error", "/policy"]
+          ports:
+            - name: http
+              containerPort: 8181
+          volumeMounts:
+            - name: policy
+              mountPath: /policy
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 6
+          resources:
+            {{- toYaml .Values.opa.resources | nindent 12 }}
+      volumes:
+        - name: policy
+          configMap:
+            name: opa-policy
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # Fixed name to match the compose service DNS name (http://opa:8181).
+  name: opa
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "opa") | nindent 4 }}
+spec:
+  selector:
+    {{- include "ai-sentinel.selectorLabels" (dict "root" $ "component" "opa") | nindent 4 }}
+  ports:
+    - name: http
+      port: 8181
+      targetPort: http

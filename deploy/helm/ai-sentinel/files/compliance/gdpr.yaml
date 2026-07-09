@@ -1,0 +1,22 @@
+framework: GDPR
+displayName: "EU General Data Protection Regulation"
+# Starter set uses publicly documented GDPR article references. Still marked for review.
+controls:
+  - controlId: "Art. 5(1)(f)"
+    title: "Integrity and confidentiality"
+    description: "Personal data processed with appropriate security against unauthorised processing/loss."
+    mappedCategories: [PII]
+    severity: high
+    review: "# REVIEW: verify control ID"
+  - controlId: "Art. 32"
+    title: "Security of processing"
+    description: "Appropriate technical/organisational measures incl. encryption and access control."
+    mappedCategories: [PII, SECRET]
+    severity: high
+    review: "# REVIEW: verify control ID"
+  - controlId: "Art. 9"
+    title: "Processing of special categories of personal data"
+    description: "Heightened protection for sensitive categories (health, biometrics, etc.)."
+    mappedCategories: [PHI]
+    severity: critical
+    review: "# REVIEW: verify control ID"

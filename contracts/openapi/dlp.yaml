@@ -1,0 +1,132 @@
+openapi: 3.1.0
+info:
+  title: ZealDefense AI Sentinel — DLP / Detection API
+  version: 0.1.0
+  description: >
+    Data Loss Prevention scanning. The Go DLP service delegates the actual detection to the
+    Python `detection-svc` (Presidio + YARA + custom regex, Brief R2). This contract is the
+    detection-svc HTTP surface as consumed by the Go prompt-inspection and DLP services.
+    Detection is REAL — never scripted if/else (Brief §0.2, §12).
+servers:
+  - url: http://localhost:8000
+    description: detection-svc (FastAPI, Python)
+tags:
+  - name: detection
+security:
+  - oidc: []
+paths:
+  /healthz:
+    get:
+      operationId: detectionHealth
+      tags: [detection]
+      summary: Liveness probe (reports loaded recognizers)
+      responses:
+        '200':
+          description: Healthy
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DetectionHealth' }
+  /scan:
+    post:
+      operationId: scanContent
+      tags: [detection]
+      summary: Scan text/content for PII, PHI, PCI, secrets, source code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ScanRequest' }
+      responses:
+        '200':
+          description: Detection result with findings and redaction preview
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ScanResult' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+components:
+  securitySchemes:
+    oidc:
+      type: openIdConnect
+      # Keycloak/OIDC (Brief auth stack). Realm deployed on the Helm path (Phase 5);
+      # on the compose demo path the gateway terminates auth in front of services.
+      openIdConnectUrl: http://localhost:8080/realms/ai-sentinel/.well-known/openid-configuration
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+        detail: { type: string }
+    DetectionHealth:
+      type: object
+      required: [status, engines]
+      properties:
+        status: { type: string, enum: [ok] }
+        engines:
+          type: object
+          description: Which detection engines loaded and their recognizer/rule counts
+          properties:
+            presidio: { type: integer, description: number of recognizers }
+            yara: { type: integer, description: number of compiled rules }
+            regex: { type: integer, description: number of custom patterns }
+    ScanRequest:
+      type: object
+      required: [content]
+      properties:
+        content: { type: string, description: Raw text or file content to scan }
+        contentType:
+          type: string
+          enum: [text, csv, code, json]
+          default: text
+        filename: { type: string }
+        language: { type: string, default: en }
+        entityTypes:
+          type: array
+          description: Optional filter — restrict to these entity types
+          items: { type: string }
+    ScanResult:
+      type: object
+      required: [findings, redactedPreview, stats]
+      properties:
+        findings:
+          type: array
+          items: { $ref: '#/components/schemas/Finding' }
+        redactedPreview:
+          type: string
+          description: Content with each finding replaced by `<TYPE> [REDACTED]`
+        stats: { $ref: '#/components/schemas/ScanStats' }
+    Finding:
+      type: object
+      required: [type, engine, start, end, score]
+      properties:
+        type:
+          type: string
+          description: Entity/category (e.g. US_SSN, EMAIL_ADDRESS, CREDIT_CARD, AWS_KEY, SOURCE_CODE)
+        category:
+          type: string
+          enum: [PII, PHI, PCI, SECRET, CODE, OTHER]
+        engine:
+          type: string
+          enum: [presidio, yara, regex]
+        text: { type: string, description: Matched text (may be masked in logs) }
+        start: { type: integer }
+        end: { type: integer }
+        score: { type: number, format: float, minimum: 0, maximum: 1 }
+        ruleName: { type: string, description: 'YARA rule or regex pattern name, if applicable' }
+    ScanStats:
+      type: object
+      required: [totalFindings, byCategory]
+      properties:
+        totalFindings: { type: integer }
+        byCategory:
+          type: object
+          additionalProperties: { type: integer }
+        highestScore: { type: number, format: float }
+        durationMs: { type: integer }

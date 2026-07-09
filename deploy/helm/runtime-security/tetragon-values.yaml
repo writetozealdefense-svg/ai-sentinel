@@ -1,0 +1,35 @@
+# ---------------------------------------------------------------------------
+# tetragon-values.yaml — values for the `cilium/tetragon` chart.
+#
+# Install (see README.md in this directory for the full ordered runbook):
+#   helm install tetragon cilium/tetragon -n kube-system \
+#     -f deploy/helm/runtime-security/tetragon-values.yaml
+#
+# Default agent configuration is kept: events are exported to stdout via the
+# chart's export-stdout sidecar, so `kubectl logs -n kube-system ds/tetragon
+# -c export-stdout` (or `tetra getevents`) shows TracingPolicy hits.
+# Target environment: kind on Docker Desktop (WSL2 backend), single node.
+# ---------------------------------------------------------------------------
+
+# Tetragon agent DaemonSet — modest resources for a kind cluster.
+tetragon:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+# The operator installs/manages the Tetragon CRDs (TracingPolicy etc.).
+# Keep it enabled (default) so `kubectl apply -f tetragon-tracingpolicy.yaml`
+# has the CRD available.
+tetragonOperator:
+  enabled: true
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi

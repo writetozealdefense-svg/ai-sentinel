@@ -1,0 +1,137 @@
+openapi: 3.1.0
+info:
+  title: ZealDefense AI Sentinel — Agent Security API
+  version: 0.1.0
+  description: >
+    Agentic-AI security. Discovers agent frameworks (LangGraph, CrewAI, AutoGen,
+    OpenAI-Agents-SDK, MCP) from SIMULATED agent telemetry (Brief R4, Phase 3), monitors
+    tool use / data access / privilege escalation, and emits a 0–100 Agent Risk Score.
+servers:
+  - url: http://localhost:8083
+    description: Agent security service (compose path)
+tags:
+  - name: agents
+security:
+  - oidc: []
+paths:
+  /healthz:
+    get:
+      operationId: agentHealth
+      tags: [agents]
+      summary: Liveness probe
+      responses:
+        '200':
+          description: Healthy
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+  /agents:
+    get:
+      operationId: listAgents
+      tags: [agents]
+      summary: List discovered agents with current risk scores
+      responses:
+        '200':
+          description: Agents
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Agent' }
+  /agents/telemetry:
+    post:
+      operationId: ingestAgentTelemetry
+      tags: [agents]
+      summary: Ingest a SIMULATED agent activity event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AgentTelemetry' }
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accepted]
+                properties:
+                  accepted: { type: boolean }
+                  agentId: { type: string }
+                  riskScore: { type: integer }
+  /agents/{id}:
+    get:
+      operationId: getAgent
+      tags: [agents]
+      summary: Get a single agent with activity history
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Agent detail
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Agent' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    oidc:
+      type: openIdConnect
+      # Keycloak/OIDC (Brief auth stack). Realm deployed on the Helm path (Phase 5);
+      # on the compose demo path the gateway terminates auth in front of services.
+      openIdConnectUrl: http://localhost:8080/realms/ai-sentinel/.well-known/openid-configuration
+  responses:
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [ok] }
+        service: { type: string }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+        detail: { type: string }
+    Agent:
+      type: object
+      required: [agentId, framework, riskScore, simulated]
+      properties:
+        agentId: { type: string }
+        name: { type: string }
+        framework:
+          type: string
+          enum: [langgraph, crewai, autogen, openai-agents-sdk, mcp]
+        owner: { type: string, format: email }
+        tools:
+          type: array
+          items: { type: string }
+          description: Discovered tools (e.g. jira, github, salesforce)
+        riskScore: { type: integer, minimum: 0, maximum: 100 }
+        riskFactors:
+          type: array
+          items: { type: string }
+        simulated: { type: boolean, const: true }
+        lastSeen: { type: string, format: date-time }
+    AgentTelemetry:
+      type: object
+      required: [agentId, framework, action, simulated, timestamp]
+      properties:
+        agentId: { type: string }
+        framework: { type: string, enum: [langgraph, crewai, autogen, openai-agents-sdk, mcp] }
+        action:
+          type: string
+          enum: [tool_call, data_access, privilege_escalation, external_call]
+        tool: { type: string }
+        target: { type: string, description: resource the action touched }
+        sensitive: { type: boolean }
+        simulated: { type: boolean, const: true }
+        timestamp: { type: string, format: date-time }

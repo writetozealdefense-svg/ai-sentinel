@@ -1,0 +1,25 @@
+# ZealDefense AI Sentinel — umbrella chart (Phase 5 "helm install" hardened path).
+#
+# This is DISTINCT from the compose demo path (deploy/compose/docker-compose.yml).
+# Service DNS names are kept identical to the compose service names (postgres, nats,
+# prompt-svc, ...) so every inter-service URL carries over unchanged.
+#
+# NOTE ON files/: the chart embeds copies of three repo sources (Helm can only read
+# files inside the chart root):
+#   files/postgres/001_init.sql   <- db/postgres/001_init.sql        (source of truth)
+#   files/compliance/*.yaml       <- fixtures/compliance/*.yaml      (source of truth)
+#   files/policy/*.rego           <- policy/opa/*.rego               (source of truth)
+# If the originals change, re-copy them before packaging.
+apiVersion: v2
+name: ai-sentinel
+description: >-
+  ZealDefense AI Sentinel — AI Security Posture Management demo stack, hardened
+  for Kubernetes (Pod Security Standards restricted, per-service ServiceAccounts,
+  default-deny ingress NetworkPolicies). Demo cluster chart, not production HA.
+type: application
+version: 0.1.0
+appVersion: "0.5.0"
+keywords:
+  - ai-security
+  - aispm
+  - demo

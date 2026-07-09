@@ -1,0 +1,14 @@
+# kind cluster config for the ai-sentinel Helm path (PHASE5-INTEGRATION.md).
+# The API server on this machine's Docker Desktop VM takes ~4.5 minutes to first
+# become healthy (slow etcd fsync on the VM disk) — just past kubeadm's default
+# 4m wait-control-plane deadline. Raise the timeout so bootstrap succeeds.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: ai-sentinel
+nodes:
+  - role: control-plane
+kubeadmConfigPatches:
+  - |
+    kind: ClusterConfiguration
+    apiServer:
+      timeoutForControlPlane: 20m0s

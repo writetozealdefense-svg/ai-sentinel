@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+frontend/.next/
+frontend/out/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+bin/
+vendor/
+
+# Env / secrets
+.env
+.env.local
+*.local
+
+# Build artifacts
+dist/
+build/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local Claude Code session config
+.claude/
+
+# Generated clients/stubs (committed selectively — see contracts/README.md)
+frontend/src/lib/api/generated/

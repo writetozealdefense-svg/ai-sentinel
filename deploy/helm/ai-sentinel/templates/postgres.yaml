@@ -1,0 +1,115 @@
+# ---------------------------------------------------------------------------
+# postgres — single replica on emptyDir: DEMO cluster only, NOT production HA.
+# Data does not survive pod rescheduling; the init SQL re-seeds the schema.
+#
+# securityContext: postgres:16-alpine ships user `postgres` as uid/gid 70.
+# Running the entrypoint directly as uid 70 (instead of root + su) is a
+# supported mode of the official image. Root FS is read-only; the writable
+# paths the image needs (PGDATA, /var/run/postgresql, /tmp) are emptyDirs,
+# group-owned via fsGroup 70.
+# ---------------------------------------------------------------------------
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: postgres
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "postgres") | nindent 4 }}
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "postgres") | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate # emptyDir + single writer: never run two postgres pods side by side
+  selector:
+    matchLabels:
+      {{- include "ai-sentinel.selectorLabels" (dict "root" $ "component" "postgres") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ai-sentinel.labels" (dict "root" $ "component" "postgres") | nindent 8 }}
+    spec:
+      serviceAccountName: postgres
+      automountServiceAccountToken: false
+      # No service-link env injection: a Service named e.g. "neo4j" would inject
+      # NEO4J_PORT_* vars that the neo4j entrypoint fatally misparses as config.
+      enableServiceLinks: false
+      securityContext:
+        {{- include "ai-sentinel.podSecurityContext" (dict "fsGroup" 70) | nindent 8 }}
+      containers:
+        - name: postgres
+          image: {{ .Values.postgres.image }}
+          imagePullPolicy: {{ .Values.postgres.imagePullPolicy }}
+          securityContext:
+            {{- include "ai-sentinel.containerSecurityContext" (dict "uid" 70 "readOnlyRootFilesystem" true) | nindent 12 }}
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: {{ .Values.postgres.user | quote }}
+            - name: POSTGRES_DB
+              value: {{ .Values.postgres.database | quote }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ai-sentinel-secrets
+                  key: postgres-password
+            # Subdirectory of the emptyDir mount so initdb sees an empty dir it owns.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+            - name: pgrun
+              mountPath: /var/run/postgresql
+            - name: tmp
+              mountPath: /tmp
+            - name: initdb
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", {{ .Values.postgres.user | quote }}, "-d", {{ .Values.postgres.database | quote }}]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", {{ .Values.postgres.user | quote }}, "-d", {{ .Values.postgres.database | quote }}]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
+          resources:
+            {{- toYaml .Values.postgres.resources | nindent 12 }}
+      volumes:
+        - name: pgdata
+          emptyDir: {} # demo only — no persistence across rescheduling
+        - name: pgrun
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        - name: initdb
+          configMap:
+            name: postgres-init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # Fixed name (not release-prefixed): app DSNs use postgres://...@postgres:5432,
+  # identical to the compose service DNS name.
+  name: postgres
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "postgres") | nindent 4 }}
+spec:
+  selector:
+    {{- include "ai-sentinel.selectorLabels" (dict "root" $ "component" "postgres") | nindent 4 }}
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres

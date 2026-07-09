@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zealdefense.ai/events/prompt.inspected.schema.json",
+  "title": "ai.prompt.inspected",
+  "type": "object",
+  "required": ["eventId", "promptId", "userEmail", "provider", "decision", "riskScore", "timestamp"],
+  "additionalProperties": false,
+  "properties": {
+    "eventId": { "type": "string", "format": "uuid" },
+    "promptId": { "type": "string", "format": "uuid" },
+    "userEmail": { "type": "string", "format": "email" },
+    "provider": { "type": "string" },
+    "artifactName": { "type": "string" },
+    "decision": { "type": "string", "enum": ["ALLOW", "WARN", "REDACT", "BLOCK"] },
+    "riskScore": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "categories": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["PII", "PHI", "PCI", "SECRET", "CODE", "OTHER"] }
+    },
+    "findingCount": { "type": "integer", "minimum": 0 },
+    "scenario": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" }
+  }
+}

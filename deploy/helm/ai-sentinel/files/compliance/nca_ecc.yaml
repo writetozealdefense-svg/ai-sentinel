@@ -1,0 +1,11 @@
+framework: NCA_ECC
+displayName: "Saudi NCA Essential Cybersecurity Controls (ECC)"
+# Brief R5: NCA ECC clause numbers are NOT populated from memory. The product owner — who
+# can authoritatively cite these — must fill in controlId values. Do not guess them.
+controls:
+  - controlId: "TODO-VERIFY"
+    title: "Data leakage / sensitive data protection (placeholder)"
+    description: "Map to the relevant ECC domain for protecting sensitive data from AI exfiltration."
+    mappedCategories: [PII, PHI, PCI, SECRET]
+    severity: high
+    review: "# REVIEW: verify control ID — product owner to supply authoritative NCA ECC clause"

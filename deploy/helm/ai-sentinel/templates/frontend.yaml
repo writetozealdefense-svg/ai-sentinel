@@ -1,0 +1,105 @@
+# ---------------------------------------------------------------------------
+# frontend — Next.js standalone on node:20-alpine, port 3000.
+#
+# securityContext: frontend/Dockerfile creates `nextjs` uid 1001 and the image
+# already runs as it. Root FS is read-only with emptyDirs at /tmp and
+# /app/.next/cache (the two paths the Next standalone server writes at
+# runtime — image-optimizer/ISR cache). If a new Next feature needs another
+# writable path, prefer adding an emptyDir over relaxing the read-only root.
+# ---------------------------------------------------------------------------
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: frontend
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "frontend") | nindent 4 }}
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "frontend") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "ai-sentinel.selectorLabels" (dict "root" $ "component" "frontend") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ai-sentinel.labels" (dict "root" $ "component" "frontend") | nindent 8 }}
+    spec:
+      serviceAccountName: frontend
+      automountServiceAccountToken: false
+      # No service-link env injection: a Service named e.g. "neo4j" would inject
+      # NEO4J_PORT_* vars that the neo4j entrypoint fatally misparses as config.
+      enableServiceLinks: false
+      securityContext:
+        {{- include "ai-sentinel.podSecurityContext" (dict "fsGroup" 1001) | nindent 8 }}
+      containers:
+        - name: frontend
+          image: {{ .Values.frontend.image }}
+          imagePullPolicy: {{ .Values.frontend.imagePullPolicy }}
+          securityContext:
+            {{- include "ai-sentinel.containerSecurityContext" (dict "uid" 1001 "readOnlyRootFilesystem" true) | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            # Same in-cluster URLs as compose — service DNS names are identical.
+            - name: PROMPT_SVC_URL
+              value: "http://prompt-svc:8082"
+            - name: DISCOVERY_SVC_URL
+              value: "http://discovery-svc:8081"
+            - name: COMPLIANCE_SVC_URL
+              value: "http://compliance-svc:8084"
+            - name: RUNTIME_SVC_URL
+              value: "http://telemetry-generator:8087"
+            - name: AGENT_SVC_URL
+              value: "http://agent-svc:8083"
+            - name: GRAPH_SVC_URL
+              value: "http://graph-svc:8085"
+            - name: COPILOT_SVC_URL
+              value: "http://copilot-svc:8086"
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: next-cache
+              mountPath: /app/.next/cache
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 6
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: next-cache
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # Fixed name to match the compose service DNS name. Reach it from the host
+  # with: kubectl -n ai-sentinel port-forward svc/frontend 3100:3000
+  name: frontend
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "frontend") | nindent 4 }}
+spec:
+  selector:
+    {{- include "ai-sentinel.selectorLabels" (dict "root" $ "component" "frontend") | nindent 4 }}
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http

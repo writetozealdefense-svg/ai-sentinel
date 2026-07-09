@@ -1,0 +1,71 @@
+# ---------------------------------------------------------------------------
+# falco-values.yaml — values for the official `falcosecurity/falco` chart.
+#
+# Install (see README.md in this directory for the full ordered runbook):
+#   helm install falco falcosecurity/falco -n falco --create-namespace \
+#     -f deploy/helm/runtime-security/falco-values.yaml
+#
+# Target environment: kind on Docker Desktop (WSL2 backend), single node.
+# Contract: docs/PHASE5-INTEGRATION.md §"Runtime security".
+# ---------------------------------------------------------------------------
+
+# WSL2 kernel is 5.15+ with BTF, so the modern eBPF (CO-RE) driver should
+# load without kernel headers or a driver-loader init container.
+# If it fails on this machine, capture the falco pod log error verbatim
+# (see README.md fallback notes) — do not fake events.
+driver:
+  kind: modern_ebpf
+
+# The falcosecurity/falco chart (this version) exposes no hostPID value, so it
+# is applied to the DaemonSet post-install with `kubectl patch` (see README).
+# hostPID lets the modern-eBPF probe attribute syscalls to processes in OTHER
+# pods on the node; without it the falco pod only sees its own PID namespace
+# ("disabled BPF iterators (not running in the root PID namespace)") and its
+# container-context rules (e.g. "Terminal shell in container") never fire on a
+# `kubectl exec` into a workload pod.
+
+# Flush stdout immediately so alerts appear in `kubectl logs` without delay
+# (recommended by the chart for demo/debug use).
+tty: true
+
+# Falco engine config (rendered into falco.yaml by the chart under the
+# `falco:` values key).
+falco:
+  json_output: true
+  json_include_output_property: true
+
+# Modest footprint for a single-node kind cluster.
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# falcosidekick subchart: fan out Falco alerts over HTTP.
+# When falcosidekick.enabled=true the falco chart automatically wires
+# falco's http_output to the falcosidekick service — no extra falco config
+# needed here.
+falcosidekick:
+  enabled: true
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+  webui:
+    enabled: false
+  config:
+    # Forward every alert (priority "" = no minimum) to the AI Sentinel
+    # telemetry-generator ingest endpoint (RUNTIME_MODE=ingest), which
+    # normalizes falcosidekick webhook payloads to RuntimeEvent with
+    # simulated=false. Cross-namespace FQDN: falco runs in the `falco`
+    # namespace, telemetry-generator in `ai-sentinel`.
+    webhook:
+      address: http://telemetry-generator.ai-sentinel.svc:8087/runtime/events
+      method: POST
+      minimumpriority: ""

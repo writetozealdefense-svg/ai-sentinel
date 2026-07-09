@@ -1,0 +1,143 @@
+openapi: 3.1.0
+info:
+  title: ZealDefense AI Sentinel — Compliance API
+  version: 0.1.0
+  description: >
+    Compliance posture. Control mappings (GDPR, HIPAA, ISO 27001, NIST AI RMF, SAMA CSF,
+    NCA ECC, PDPL, DPDPA) are read EXCLUSIVELY from fixtures/compliance/*.yaml (Brief R5).
+    The service never invents control IDs. Per-framework scores combine fixture mappings
+    with live violations.
+servers:
+  - url: http://localhost:8084
+    description: Compliance service (compose path)
+tags:
+  - name: compliance
+security:
+  - oidc: []
+paths:
+  /healthz:
+    get:
+      operationId: complianceHealth
+      tags: [compliance]
+      summary: Liveness probe
+      responses:
+        '200':
+          description: Healthy
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+  /compliance/frameworks:
+    get:
+      operationId: listFrameworks
+      tags: [compliance]
+      summary: List supported frameworks with current posture scores
+      responses:
+        '200':
+          description: Frameworks
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/FrameworkScore' }
+  /compliance/frameworks/{framework}/controls:
+    get:
+      operationId: listControls
+      tags: [compliance]
+      summary: List the (fixture-sourced) control mappings for a framework
+      parameters:
+        - { name: framework, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Controls
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ControlMapping' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /compliance/violations:
+    get:
+      operationId: listViolations
+      tags: [compliance]
+      summary: List compliance violations
+      parameters:
+        - { name: framework, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 50 } }
+      responses:
+        '200':
+          description: Violations
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Violation' }
+components:
+  securitySchemes:
+    oidc:
+      type: openIdConnect
+      # Keycloak/OIDC (Brief auth stack). Realm deployed on the Helm path (Phase 5);
+      # on the compose demo path the gateway terminates auth in front of services.
+      openIdConnectUrl: http://localhost:8080/realms/ai-sentinel/.well-known/openid-configuration
+  responses:
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [ok] }
+        service: { type: string }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+        detail: { type: string }
+    FrameworkScore:
+      type: object
+      required: [framework, score, controlCount, openViolations]
+      properties:
+        framework:
+          type: string
+          enum: [GDPR, HIPAA, ISO27001, NIST_AI_RMF, SAMA_CSF, NCA_ECC, PDPL, DPDPA]
+        displayName: { type: string }
+        score: { type: integer, minimum: 0, maximum: 100 }
+        controlCount: { type: integer }
+        openViolations: { type: integer }
+        reviewRequired:
+          type: boolean
+          description: True while fixture control IDs still carry their REVIEW marker (Brief R5)
+    ControlMapping:
+      type: object
+      required: [framework, controlId, title, reviewMarker]
+      properties:
+        framework: { type: string }
+        controlId:
+          type: string
+          description: 'e.g. "Art. 5(1)(f)" — sourced from fixture, never invented'
+        title: { type: string }
+        description: { type: string }
+        mappedCategories:
+          type: array
+          items: { type: string, enum: [PII, PHI, PCI, SECRET, CODE, OTHER] }
+        reviewMarker:
+          type: string
+          description: 'The verbatim "# REVIEW: verify control ID" marker from the fixture (Brief R5)'
+    Violation:
+      type: object
+      required: [violationId, framework, controlId, severity, timestamp]
+      properties:
+        violationId: { type: string, format: uuid }
+        promptId: { type: string, format: uuid }
+        userEmail: { type: string, format: email }
+        framework: { type: string }
+        controlId: { type: string }
+        category: { type: string, enum: [PII, PHI, PCI, SECRET, CODE, OTHER] }
+        severity: { type: string, enum: [low, medium, high, critical] }
+        description: { type: string }
+        timestamp: { type: string, format: date-time }

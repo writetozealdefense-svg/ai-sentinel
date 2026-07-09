@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zealdefense.ai/events/discovery.observed.schema.json",
+  "title": "ai.discovery.observed",
+  "type": "object",
+  "required": ["eventId", "provider", "userEmail", "source", "simulated", "timestamp"],
+  "additionalProperties": false,
+  "properties": {
+    "eventId": { "type": "string", "format": "uuid" },
+    "provider": {
+      "type": "string",
+      "enum": ["chatgpt", "claude", "gemini", "copilot", "deepseek", "grok", "perplexity", "ollama", "openwebui", "mcp", "browser-ext"]
+    },
+    "userEmail": { "type": "string", "format": "email" },
+    "source": { "type": "string", "enum": ["browser-ext", "dns", "proxy", "endpoint"] },
+    "action": { "type": "string", "enum": ["visit", "upload", "prompt", "download"] },
+    "artifactName": { "type": "string" },
+    "bytes": { "type": "integer", "minimum": 0 },
+    "simulated": { "const": true },
+    "timestamp": { "type": "string", "format": "date-time" }
+  }
+}

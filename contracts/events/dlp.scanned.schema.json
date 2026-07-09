@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zealdefense.ai/events/dlp.scanned.schema.json",
+  "title": "ai.dlp.scanned",
+  "type": "object",
+  "required": ["eventId", "promptId", "totalFindings", "highestScore", "timestamp"],
+  "additionalProperties": false,
+  "properties": {
+    "eventId": { "type": "string", "format": "uuid" },
+    "promptId": { "type": "string", "format": "uuid" },
+    "totalFindings": { "type": "integer", "minimum": 0 },
+    "byCategory": {
+      "type": "object",
+      "additionalProperties": { "type": "integer" }
+    },
+    "highestScore": { "type": "number", "minimum": 0, "maximum": 1 },
+    "engines": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["presidio", "yara", "regex"] }
+    },
+    "timestamp": { "type": "string", "format": "date-time" }
+  }
+}

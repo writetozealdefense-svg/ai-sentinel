@@ -1,0 +1,39 @@
+ZealDefense AI Sentinel ({{ .Chart.Name }}-{{ .Chart.Version }}) deployed to namespace {{ .Release.Namespace }}.
+
+{{- if not .Values.namespace.manage }}
+
+1. REQUIRED — label the namespace for Pod Security Standards (restricted, enforce).
+   `--create-namespace` creates an unlabeled namespace; every pod spec in this
+   chart is restricted-compliant, but enforcement only happens after:
+
+   kubectl label namespace {{ .Release.Namespace }} \
+     pod-security.kubernetes.io/enforce=restricted \
+     pod-security.kubernetes.io/warn=restricted \
+     pod-security.kubernetes.io/audit=restricted --overwrite
+
+   (Alternative: install with --set namespace.manage=true and WITHOUT
+   --create-namespace to have the chart ship a pre-labeled Namespace object.)
+{{- end }}
+
+2. App images are imagePullPolicy: Never — side-load them into kind first:
+
+   kind load docker-image --name ai-sentinel \
+     ai-sentinel-detection-svc:latest ai-sentinel-discovery-svc:latest \
+     ai-sentinel-prompt-svc:latest ai-sentinel-compliance-svc:latest \
+     ai-sentinel-agent-svc:latest ai-sentinel-graph-svc:latest \
+     ai-sentinel-copilot-svc:latest ai-sentinel-telemetry-generator:latest \
+     ai-sentinel-frontend:latest
+
+3. Watch rollout:      kubectl get pods -n {{ .Release.Namespace }} -w
+   Open the frontend:  kubectl -n {{ .Release.Namespace }} port-forward svc/frontend 3100:3000
+                       then browse http://localhost:3100
+
+4. Runtime feed: telemetry-generator runs with RUNTIME_MODE={{ .Values.telemetryGenerator.runtimeMode }}.
+   Point falcosidekick's HTTP output at:
+   http://telemetry-generator.{{ .Release.Namespace }}.svc:8087/runtime/events
+
+5. Secrets default to the demo password — production must override:
+   --set secrets.postgresPassword=... --set secrets.neo4jPassword=...
+
+6. NetworkPolicies are installed but kind's default CNI (kindnet) does NOT
+   enforce them; use a netpol-capable CNI (Calico/Cilium) for enforcement.

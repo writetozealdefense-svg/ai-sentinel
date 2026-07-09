@@ -1,0 +1,93 @@
+# ---------------------------------------------------------------------------
+# graph-svc — Go, distroless static:nonroot (uid 65532), port 8085.
+# Talks to postgres, NATS and Neo4j (bolt). NEO4J_PASSWORD comes from the
+# Secret (compose hard-coded it; here it stays values-driven and secret-backed).
+# ---------------------------------------------------------------------------
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: graph-svc
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "graph-svc") | nindent 4 }}
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: graph-svc
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "graph-svc") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "ai-sentinel.selectorLabels" (dict "root" $ "component" "graph-svc") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ai-sentinel.labels" (dict "root" $ "component" "graph-svc") | nindent 8 }}
+    spec:
+      serviceAccountName: graph-svc
+      automountServiceAccountToken: false
+      # No service-link env injection: a Service named e.g. "neo4j" would inject
+      # NEO4J_PORT_* vars that the neo4j entrypoint fatally misparses as config.
+      enableServiceLinks: false
+      securityContext:
+        {{- include "ai-sentinel.podSecurityContext" (dict) | nindent 8 }}
+      containers:
+        - name: graph-svc
+          image: {{ .Values.graphSvc.image }}
+          imagePullPolicy: {{ .Values.graphSvc.imagePullPolicy }}
+          securityContext:
+            {{- include "ai-sentinel.containerSecurityContext" (dict "uid" 65532 "readOnlyRootFilesystem" true) | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8085
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ai-sentinel-secrets
+                  key: postgres-password
+            - name: DATABASE_URL
+              value: "postgres://{{ .Values.postgres.user }}:$(POSTGRES_PASSWORD)@postgres:5432/{{ .Values.postgres.database }}?sslmode=disable"
+            - name: NATS_URL
+              value: "nats://nats:4222"
+            - name: NEO4J_URL
+              value: "bolt://neo4j:7687"
+            - name: NEO4J_USER
+              value: "neo4j"
+            - name: NEO4J_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ai-sentinel-secrets
+                  key: neo4j-password
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 6
+          resources:
+            {{- toYaml .Values.graphSvc.resources | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # Fixed name to match the compose service DNS name (http://graph-svc:8085).
+  name: graph-svc
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "graph-svc") | nindent 4 }}
+spec:
+  selector:
+    {{- include "ai-sentinel.selectorLabels" (dict "root" $ "component" "graph-svc") | nindent 4 }}
+  ports:
+    - name: http
+      port: 8085
+      targetPort: http

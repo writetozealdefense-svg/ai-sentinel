@@ -1,0 +1,22 @@
+framework: ISO27001
+displayName: "ISO/IEC 27001:2022 — Annex A controls"
+# Starter set uses publicly documented ISO/IEC 27001:2022 Annex A references. Still marked for review.
+controls:
+  - controlId: "A.5.34"
+    title: "Privacy and protection of PII"
+    description: "Identify and meet requirements regarding preservation of privacy and PII."
+    mappedCategories: [PII, PHI]
+    severity: high
+    review: "# REVIEW: verify control ID"
+  - controlId: "A.8.12"
+    title: "Data leakage prevention"
+    description: "Apply DLP measures to systems/networks that process sensitive information."
+    mappedCategories: [PII, PCI, SECRET, CODE]
+    severity: high
+    review: "# REVIEW: verify control ID"
+  - controlId: "A.5.15"
+    title: "Access control"
+    description: "Rules to control physical and logical access based on business/security needs."
+    mappedCategories: [SECRET]
+    severity: medium
+    review: "# REVIEW: verify control ID"

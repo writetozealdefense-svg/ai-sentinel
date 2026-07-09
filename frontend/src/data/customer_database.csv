@@ -1,0 +1,11 @@
+customer_id,full_name,email,phone,ssn,credit_card,address,date_of_birth,notes
+1001,James Wilson,james.wilson@example.com,+1-415-555-0142,123-45-6789,4111111111111111,"742 Evergreen Terrace, Springfield, IL 62704",1984-03-12,VIP customer
+1002,Maria Garcia,maria.garcia@example.com,+1-212-555-0177,234-56-7890,5500005555555559,"1600 Pennsylvania Ave, Washington, DC 20500",1990-07-22,Premium tier
+1003,David Chen,david.chen@example.net,+1-650-555-0193,345-67-8901,340000000000009,"500 Oracle Parkway, Redwood City, CA 94065",1978-11-05,Net-60 terms
+1004,Sarah Johnson,sarah.johnson@example.com,+1-312-555-0118,456-78-9012,4012888888881881,"233 S Wacker Dr, Chicago, IL 60606",1995-01-30,New account
+1005,Ahmed Al-Rashid,ahmed.rashid@example.com,+1-713-555-0166,567-89-0123,6011000990139424,"1000 Louisiana St, Houston, TX 77002",1982-09-14,Enterprise
+1006,Emily Brown,emily.brown@example.org,+1-206-555-0134,678-90-1234,3530111333300000,"400 Broad St, Seattle, WA 98109",1988-05-19,Churn risk
+1007,Michael Davis,michael.davis@example.com,+1-404-555-0151,789-01-2345,4222222222222,"191 Peachtree St NE, Atlanta, GA 30303",1975-12-01,Legacy
+1008,Jennifer Miller,jennifer.miller@example.com,+1-617-555-0129,890-12-3456,5105105105105100,"1 Federal St, Boston, MA 02110",1992-08-08,Referral
+1009,Robert Taylor,robert.taylor@example.net,+1-305-555-0188,901-23-4567,4000000000000002,"801 Brickell Ave, Miami, FL 33131",1980-04-25,High value
+1010,Lisa Anderson,lisa.anderson@example.com,+1-503-555-0145,012-34-5678,5555555555554444,"1211 SW 5th Ave, Portland, OR 97204",1986-10-17,Standard

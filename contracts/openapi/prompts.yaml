@@ -1,0 +1,170 @@
+openapi: 3.1.0
+info:
+  title: ZealDefense AI Sentinel — Prompt Inspection API
+  version: 0.1.0
+  description: >
+    Prompt inspection pipeline. Receives an AI interaction (prompt + optional artifact),
+    calls detection-svc (Brief R2) for real PII/PHI/PCI/secret/code detection, computes a
+    risk score, evaluates an OPA policy to reach an ALLOW/WARN/REDACT/BLOCK decision, and
+    emits a violation when warranted. This is the spine of the demo (Brief §4, Scenario 1).
+servers:
+  - url: http://localhost:8082
+    description: Prompt inspection service (compose path)
+tags:
+  - name: prompts
+security:
+  - oidc: []
+paths:
+  /healthz:
+    get:
+      operationId: promptHealth
+      tags: [prompts]
+      summary: Liveness probe
+      responses:
+        '200':
+          description: Healthy
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+  /prompts/inspect:
+    post:
+      operationId: inspectPrompt
+      tags: [prompts]
+      summary: Inspect an AI interaction end-to-end (detect → score → decide → emit)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InspectRequest' }
+      responses:
+        '200':
+          description: Inspection result
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InspectResult' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /prompts:
+    get:
+      operationId: listPrompts
+      tags: [prompts]
+      summary: List recent inspected prompts (SOC live monitoring)
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, default: 50, maximum: 500 } }
+        - { name: decision, in: query, schema: { $ref: '#/components/schemas/Decision' } }
+      responses:
+        '200':
+          description: Recent inspections, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PromptSummary' }
+  /prompts/{id}:
+    get:
+      operationId: getPrompt
+      tags: [prompts]
+      summary: Retrieve a recorded inspected prompt
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Prompt record
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InspectResult' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    oidc:
+      type: openIdConnect
+      # Keycloak/OIDC (Brief auth stack). Realm deployed on the Helm path (Phase 5);
+      # on the compose demo path the gateway terminates auth in front of services.
+      openIdConnectUrl: http://localhost:8080/realms/ai-sentinel/.well-known/openid-configuration
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [ok] }
+        service: { type: string }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+        detail: { type: string }
+    InspectRequest:
+      type: object
+      required: [userEmail, provider, content]
+      properties:
+        userEmail: { type: string, format: email }
+        provider:
+          type: string
+          enum: [chatgpt, claude, gemini, copilot, deepseek, grok, perplexity, ollama, openwebui, mcp]
+        content: { type: string, description: The prompt text or uploaded artifact content }
+        artifactName: { type: string }
+        contentType: { type: string, enum: [text, csv, code, json], default: text }
+        scenario: { type: string, description: 'Demo scenario tag, e.g. "scenario-1"' }
+    InspectResult:
+      type: object
+      required: [promptId, decision, riskScore, findings, timestamp]
+      properties:
+        promptId: { type: string, format: uuid }
+        userEmail: { type: string, format: email }
+        provider: { type: string }
+        artifactName: { type: string }
+        decision: { $ref: '#/components/schemas/Decision' }
+        riskScore: { type: integer, minimum: 0, maximum: 100 }
+        findings:
+          type: array
+          description: Findings as returned by detection-svc
+          items: { $ref: '#/components/schemas/Finding' }
+        redactedPreview: { type: string }
+        violationId:
+          type: string
+          format: uuid
+          description: Set when a compliance violation was emitted
+        policyTrace:
+          type: string
+          description: Human-readable OPA decision rationale
+        timestamp: { type: string, format: date-time }
+    Decision:
+      type: string
+      enum: [ALLOW, WARN, REDACT, BLOCK]
+    PromptSummary:
+      type: object
+      required: [promptId, userEmail, provider, decision, riskScore, timestamp]
+      properties:
+        promptId: { type: string, format: uuid }
+        userEmail: { type: string, format: email }
+        provider: { type: string }
+        artifactName: { type: string }
+        decision: { $ref: '#/components/schemas/Decision' }
+        riskScore: { type: integer, minimum: 0, maximum: 100 }
+        categories:
+          type: array
+          items: { type: string, enum: [PII, PHI, PCI, SECRET, CODE, OTHER] }
+        scenario: { type: string }
+        timestamp: { type: string, format: date-time }
+    Finding:
+      type: object
+      required: [type, category, engine, score]
+      properties:
+        type: { type: string }
+        category: { type: string, enum: [PII, PHI, PCI, SECRET, CODE, OTHER] }
+        engine: { type: string, enum: [presidio, yara, regex] }
+        score: { type: number, format: float }
+        count: { type: integer, description: occurrences of this type }

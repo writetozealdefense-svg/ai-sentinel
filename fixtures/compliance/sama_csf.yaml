@@ -1,0 +1,11 @@
+framework: SAMA_CSF
+displayName: "Saudi Central Bank (SAMA) Cyber Security Framework"
+# Brief R5: SAMA CSF clause numbers are NOT populated from memory. The product owner must
+# supply authoritative controlId values. Do not guess them.
+controls:
+  - controlId: "TODO-VERIFY"
+    title: "Data protection / information leakage (placeholder)"
+    description: "Map to the relevant SAMA CSF control for sensitive-data protection."
+    mappedCategories: [PII, PCI, SECRET]
+    severity: high
+    review: "# REVIEW: verify control ID — product owner to supply authoritative SAMA CSF clause"

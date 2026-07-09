@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Black Hat dark theme */
+    --background: 230 35% 5%;
+    --foreground: 210 40% 96%;
+    --card: 230 30% 9%;
+    --card-foreground: 210 40% 96%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 230 35% 6%;
+    --muted: 230 20% 16%;
+    --muted-foreground: 215 18% 62%;
+    --border: 230 24% 18%;
+    --ring: 217 91% 60%;
+    --accent-blue: 210 100% 60%;
+    --accent-purple: 268 85% 66%;
+    --accent-teal: 174 80% 50%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    background-image:
+      radial-gradient(circle at 12% 8%, hsl(217 91% 60% / 0.12), transparent 40%),
+      radial-gradient(circle at 88% 12%, hsl(268 85% 66% / 0.12), transparent 42%),
+      radial-gradient(circle at 50% 100%, hsl(174 80% 50% / 0.08), transparent 45%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+}
+
+@layer utilities {
+  .text-glow-blue {
+    text-shadow: 0 0 12px hsl(var(--accent-blue) / 0.7);
+  }
+  .text-glow-purple {
+    text-shadow: 0 0 12px hsl(var(--accent-purple) / 0.7);
+  }
+  .grid-bg {
+    background-image:
+      linear-gradient(hsl(var(--border) / 0.4) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.4) 1px, transparent 1px);
+    background-size: 36px 36px;
+  }
+  .glass {
+    background: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(8px);
+  }
+}

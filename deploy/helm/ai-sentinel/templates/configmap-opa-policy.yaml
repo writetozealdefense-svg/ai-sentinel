@@ -1,0 +1,15 @@
+# OPA DLP policy bundle, mounted read-only at /policy (same layout the compose
+# path bind-mounts). Embedded from files/policy/*.rego — copies of
+# policy/opa/*.rego (source of truth). Includes dlp_test.rego to mirror the
+# compose mount exactly; OPA loads it harmlessly.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opa-policy
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "opa") | nindent 4 }}
+data:
+{{- range $path, $_ := .Files.Glob "files/policy/*.rego" }}
+  {{ base $path }}: |
+{{ $.Files.Get $path | indent 4 }}
+{{- end }}

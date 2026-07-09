@@ -1,0 +1,22 @@
+framework: NIST_AI_RMF
+displayName: "NIST AI Risk Management Framework (AI RMF 1.0)"
+# Starter set uses publicly documented AI RMF function/category identifiers. Still marked for review.
+controls:
+  - controlId: "MAP 1.1"
+    title: "Context established and understood"
+    description: "Intended purpose and context of the AI system are documented."
+    mappedCategories: [OTHER]
+    severity: low
+    review: "# REVIEW: verify control ID"
+  - controlId: "MANAGE 2.1"
+    title: "Resourcing to manage AI risks"
+    description: "Resources are allocated to manage identified AI risks (incl. data leakage)."
+    mappedCategories: [PII, SECRET, CODE]
+    severity: medium
+    review: "# REVIEW: verify control ID"
+  - controlId: "GOVERN 1.1"
+    title: "Legal and regulatory requirements understood and managed"
+    description: "Policies/processes address applicable laws on data handling by AI systems."
+    mappedCategories: [PII, PHI, PCI]
+    severity: high
+    review: "# REVIEW: verify control ID"

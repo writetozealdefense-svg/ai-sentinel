@@ -1,0 +1,29 @@
+# Redocly ruleset for ZealDefense AI Sentinel contracts.
+# We extend the recommended ruleset and tune a few rules to this project's reality.
+# Every disabled rule has a documented rationale — nothing meaningful is silenced.
+
+apis:
+  discover:    { root: contracts/openapi/discover.yaml }
+  prompts:     { root: contracts/openapi/prompts.yaml }
+  dlp:         { root: contracts/openapi/dlp.yaml }
+  agents:      { root: contracts/openapi/agents.yaml }
+  compliance:  { root: contracts/openapi/compliance.yaml }
+  graph:       { root: contracts/openapi/graph.yaml }
+  copilot:     { root: contracts/openapi/copilot.yaml }
+  runtime:     { root: contracts/openapi/runtime.yaml }
+
+extends:
+  - recommended
+
+rules:
+  # Servers intentionally point at localhost — these specs describe the docker-compose
+  # DEMO PATH (Brief R1). Production hosts are not part of the demo contract.
+  no-server-example.com: off
+  # Health and simple list (GET) endpoints don't carry bespoke 4xx bodies; the meaningful
+  # mutating endpoints (POST inspect/scan/ingest) do declare 4xx responses.
+  operation-4xx-response: off
+  # Internal product spec; not publicly licensed.
+  info-license: off
+  # Single-tag service specs; tag descriptions add no information here.
+  tag-description: off
+  # security-defined is kept ON: every spec declares the Keycloak/OIDC scheme.

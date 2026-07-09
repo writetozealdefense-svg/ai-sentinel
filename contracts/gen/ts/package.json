@@ -1,0 +1,18 @@
+{
+  "name": "@zealdefense/contracts-client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Generated TypeScript client/types from ZealDefense AI Sentinel OpenAPI contracts",
+  "type": "module",
+  "scripts": {
+    "generate": "node generate.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.13.0"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.4.0",
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,0 +1,95 @@
+# ---------------------------------------------------------------------------
+# nats — single replica on emptyDir: DEMO cluster only, NOT production HA.
+# Flags mirror compose: -js (JetStream, durable VIOLATIONS stream) and
+# -m 8222 (HTTP monitoring / healthz).
+#
+# securityContext: nats-server is a static binary that runs fine as any
+# non-root uid (no passwd entry needed, no privileged ports); uid 1000 is our
+# chosen identity. Root FS is read-only; the JetStream store defaults to
+# /tmp/nats/jetstream, so /tmp is an emptyDir (fsGroup 1000).
+# ---------------------------------------------------------------------------
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nats
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "nats") | nindent 4 }}
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nats
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "nats") | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "ai-sentinel.selectorLabels" (dict "root" $ "component" "nats") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ai-sentinel.labels" (dict "root" $ "component" "nats") | nindent 8 }}
+    spec:
+      serviceAccountName: nats
+      automountServiceAccountToken: false
+      # No service-link env injection: a Service named e.g. "neo4j" would inject
+      # NEO4J_PORT_* vars that the neo4j entrypoint fatally misparses as config.
+      enableServiceLinks: false
+      securityContext:
+        {{- include "ai-sentinel.podSecurityContext" (dict "fsGroup" 1000) | nindent 8 }}
+      containers:
+        - name: nats
+          image: {{ .Values.nats.image }}
+          imagePullPolicy: {{ .Values.nats.imagePullPolicy }}
+          securityContext:
+            {{- include "ai-sentinel.containerSecurityContext" (dict "uid" 1000 "readOnlyRootFilesystem" true) | nindent 12 }}
+          args: ["-js", "-m", "8222"]
+          ports:
+            - name: client
+              containerPort: 4222
+            - name: monitor
+              containerPort: 8222
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: monitor
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: monitor
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 6
+          resources:
+            {{- toYaml .Values.nats.resources | nindent 12 }}
+      volumes:
+        - name: tmp
+          emptyDir: {} # JetStream store — demo only, no persistence
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # Fixed name to match the compose service DNS name (nats://nats:4222).
+  name: nats
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "nats") | nindent 4 }}
+spec:
+  selector:
+    {{- include "ai-sentinel.selectorLabels" (dict "root" $ "component" "nats") | nindent 4 }}
+  ports:
+    - name: client
+      port: 4222
+      targetPort: client
+    - name: monitor
+      port: 8222
+      targetPort: monitor

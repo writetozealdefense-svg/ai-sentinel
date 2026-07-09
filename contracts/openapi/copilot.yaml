@@ -1,0 +1,128 @@
+openapi: 3.1.0
+info:
+  title: ZealDefense AI Sentinel — AI Security Copilot API
+  version: 0.1.0
+  description: >
+    RAG over the platform's own incidents/violations. DETERMINISTIC OFFLINE MODE IS THE
+    DEFAULT (Brief R3): canned responses keyed to the demo incidents, fully functional with
+    no network and no API key. Live LLM is gated behind COPILOT_LIVE=true + an env key.
+    Answers are grounded in stored violation records and fixture control mappings.
+servers:
+  - url: http://localhost:8086
+    description: Copilot service (compose path)
+tags:
+  - name: copilot
+security:
+  - oidc: []
+paths:
+  /healthz:
+    get:
+      operationId: copilotHealth
+      tags: [copilot]
+      summary: 'Liveness probe (reports mode: offline | live)'
+      responses:
+        '200':
+          description: Healthy
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CopilotHealth' }
+  /copilot/ask:
+    post:
+      operationId: askCopilot
+      tags: [copilot]
+      summary: Ask a grounded question about an incident/violation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AskRequest' }
+      responses:
+        '200':
+          description: Grounded, multi-view answer with citations
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AskResponse' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /copilot/explain/{violationId}:
+    get:
+      operationId: explainViolation
+      tags: [copilot]
+      summary: Explain why a prompt was blocked (executive / technical / compliance views)
+      parameters:
+        - { name: violationId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Three grounded views
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AskResponse' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    oidc:
+      type: openIdConnect
+      # Keycloak/OIDC (Brief auth stack). Realm deployed on the Helm path (Phase 5);
+      # on the compose demo path the gateway terminates auth in front of services.
+      openIdConnectUrl: http://localhost:8080/realms/ai-sentinel/.well-known/openid-configuration
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+        detail: { type: string }
+    CopilotHealth:
+      type: object
+      required: [status, mode]
+      properties:
+        status: { type: string, enum: [ok] }
+        mode:
+          type: string
+          enum: [offline, live]
+          description: offline = deterministic canned mode (default); live = COPILOT_LIVE=true
+    AskRequest:
+      type: object
+      required: [question]
+      properties:
+        question: { type: string }
+        violationId: { type: string, format: uuid, description: Optional incident to ground against }
+        view:
+          type: string
+          enum: [all, executive, technical, compliance]
+          default: all
+    AskResponse:
+      type: object
+      required: [mode, views, citations]
+      properties:
+        mode: { type: string, enum: [offline, live] }
+        views:
+          type: object
+          description: One grounded answer per requested view
+          properties:
+            executive: { type: string }
+            technical: { type: string }
+            compliance: { type: string }
+        citations:
+          type: array
+          description: Records the answer is grounded in (violation rows, fixture controls)
+          items: { $ref: '#/components/schemas/Citation' }
+    Citation:
+      type: object
+      required: [kind, ref]
+      properties:
+        kind: { type: string, enum: [violation, control, prompt, finding] }
+        ref: { type: string, description: Identifier of the cited record (e.g. violationId or controlId) }
+        excerpt: { type: string }

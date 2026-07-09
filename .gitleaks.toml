@@ -1,0 +1,14 @@
+# Gitleaks config — extends the default ruleset.
+[extend]
+useDefault = true
+
+# These paths are the product, not leaks: YARA rules that *detect* secrets
+# necessarily contain secret-shaped patterns, and the demo fixtures carry
+# deliberately fake credentials (AWS documentation example keys etc.) that the
+# detection pipeline is supposed to catch on stage.
+[[allowlists]]
+description = "detection rules and synthetic demo fixtures"
+paths = [
+  '''detection-svc/rules/.*''',
+  '''fixtures/demo-data/.*''',
+]

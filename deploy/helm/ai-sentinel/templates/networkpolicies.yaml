@@ -1,0 +1,262 @@
+# ===========================================================================
+# NetworkPolicies — default-deny INGRESS + explicit allows mirroring the
+# compose topology. Ingress-focused per the Phase 5 contract: egress is left
+# unrestricted (so DNS, the neo4j APOC plugin download, and app->datastore
+# calls need no egress rules and DNS cannot be broken by this chart).
+#
+# HONESTY NOTE: kind's default CNI (kindnet) does NOT enforce NetworkPolicy.
+# On a stock kind cluster these objects are declarative documentation of the
+# intended topology; enforcement requires a netpol-capable CNI (e.g. Calico
+# or Cilium). Record this in VERIFICATION.md if the demo cluster stays on
+# kindnet.
+#
+# Pod selectors match on app.kubernetes.io/name, the per-component selector
+# label every Deployment in this chart sets.
+# ===========================================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "network-policy") | nindent 4 }}
+spec:
+  # Every pod in the namespace: no ingress unless another policy allows it.
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+# frontend -> application services (the seven *_SVC_URL targets).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-to-app-services
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "network-policy") | nindent 4 }}
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values:
+          - prompt-svc
+          - discovery-svc
+          - compliance-svc
+          - agent-svc
+          - graph-svc
+          - copilot-svc
+          - telemetry-generator
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: frontend
+      ports:
+        - port: 8081
+        - port: 8082
+        - port: 8083
+        - port: 8084
+        - port: 8085
+        - port: 8086
+        - port: 8087
+---
+# prompt-svc -> detection-svc (PII/PHI scanning).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prompt-to-detection
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "network-policy") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: detection-svc
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prompt-svc
+      ports:
+        - port: 8000
+---
+# prompt-svc -> opa (DLP policy decisions).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prompt-to-opa
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "network-policy") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: opa
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prompt-svc
+      ports:
+        - port: 8181
+---
+# DB consumers -> postgres (every service whose compose env carries DATABASE_URL).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-services-to-postgres
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "network-policy") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prompt-svc
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: discovery-svc
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: compliance-svc
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: agent-svc
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: graph-svc
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: copilot-svc
+      ports:
+        - port: 5432
+---
+# NATS consumers -> nats client port (every service whose compose env carries NATS_URL).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-services-to-nats
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "network-policy") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: nats
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prompt-svc
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: discovery-svc
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: compliance-svc
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: agent-svc
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: graph-svc
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: telemetry-generator
+      ports:
+        - port: 4222
+---
+# graph-svc -> neo4j bolt.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-graph-to-neo4j
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "network-policy") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: neo4j
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: graph-svc
+      ports:
+        - port: 7687
+---
+# redis: no compose service currently wires a REDIS_URL, but the compose
+# network is flat so any service could reach it. Mirror that by allowing
+# in-namespace access only (tighten to specific consumers once one exists).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-namespace-to-redis
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "network-policy") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+      ports:
+        - port: 6379
+---
+# telemetry-generator ingest webhook: falcosidekick runs OUTSIDE this
+# namespace (the falco chart's namespace), so allow ingress on 8087 from any
+# pod in the cluster (namespaceSelector: {}). This is deliberate — the
+# webhook has no fixed source namespace and carries no secrets; scoping it
+# to a labeled falco namespace is a follow-up once the falco install lands.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-cluster-to-telemetry-ingest
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "network-policy") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: telemetry-generator
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector: {}
+      ports:
+        - port: 8087
+---
+# frontend: allow ingress from anywhere in-cluster on 3000 (an ingress
+# controller or LB pod would live in another namespace; kubectl port-forward
+# bypasses NetworkPolicy in most CNIs anyway).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-cluster-to-frontend
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "network-policy") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: frontend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector: {}
+      ports:
+        - port: 3000

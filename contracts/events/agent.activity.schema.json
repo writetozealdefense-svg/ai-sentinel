@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zealdefense.ai/events/agent.activity.schema.json",
+  "title": "ai.agent.activity",
+  "type": "object",
+  "required": ["eventId", "agentId", "framework", "action", "simulated", "timestamp"],
+  "additionalProperties": false,
+  "properties": {
+    "eventId": { "type": "string", "format": "uuid" },
+    "agentId": { "type": "string" },
+    "framework": { "type": "string", "enum": ["langgraph", "crewai", "autogen", "openai-agents-sdk", "mcp"] },
+    "owner": { "type": "string", "format": "email" },
+    "action": { "type": "string", "enum": ["tool_call", "data_access", "privilege_escalation", "external_call"] },
+    "tool": { "type": "string" },
+    "target": { "type": "string" },
+    "sensitive": { "type": "boolean" },
+    "riskScore": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "simulated": { "const": true },
+    "timestamp": { "type": "string", "format": "date-time" }
+  }
+}

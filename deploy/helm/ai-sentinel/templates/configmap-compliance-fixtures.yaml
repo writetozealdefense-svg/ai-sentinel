@@ -1,0 +1,15 @@
+# Compliance framework fixtures, mounted read-only at /fixtures/compliance for
+# prompt-svc, compliance-svc, agent-svc and copilot-svc (env COMPLIANCE_FIXTURES).
+# Embedded from files/compliance/*.yaml — copies of fixtures/compliance/*.yaml
+# (source of truth). Total ~11 KiB, far below the ~1 MiB ConfigMap cap.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: compliance-fixtures
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "compliance-fixtures") | nindent 4 }}
+data:
+{{- range $path, $_ := .Files.Glob "files/compliance/*.yaml" }}
+  {{ base $path }}: |
+{{ $.Files.Get $path | indent 4 }}
+{{- end }}

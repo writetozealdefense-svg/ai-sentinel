@@ -1,0 +1,15 @@
+# syntax=docker/dockerfile:1
+# compliance-svc (Interface 4) — port 8084
+FROM golang:1.26 AS builder
+WORKDIR /src
+COPY go.mod go.sum* ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" \
+    -o /out/compliance-svc ./cmd/compliance-svc
+
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=builder /out/compliance-svc /compliance-svc
+EXPOSE 8084
+USER nonroot:nonroot
+ENTRYPOINT ["/compliance-svc"]

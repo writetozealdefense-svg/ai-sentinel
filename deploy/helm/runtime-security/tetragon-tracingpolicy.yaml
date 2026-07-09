@@ -1,0 +1,49 @@
+# ---------------------------------------------------------------------------
+# tetragon-tracingpolicy.yaml — observe sensitive file access (/etc/shadow).
+#
+# Source: canonical upstream example from the Tetragon repository /
+# documentation "File Access Monitoring" guide:
+#   https://github.com/cilium/tetragon/blob/main/examples/tracingpolicy/filename_monitoring.yaml
+#   https://tetragon.io/docs/getting-started/file-events/
+# Trimmed to a single target path (/etc/shadow) and the read-permission
+# check. It hooks the LSM-adjacent kprobe `security_file_permission`, which
+# fires on read/write permission checks for an already-open struct file —
+# the documented shape for file-access observation (catches reads via any
+# syscall: read, pread64, mmap-backed IO, etc.).
+#
+# Trigger demo (after a workload pod is running):
+#   kubectl exec -n ai-sentinel deploy/telemetry-generator -- cat /etc/shadow
+# Observe:
+#   kubectl logs -n kube-system ds/tetragon -c export-stdout | grep shadow
+# ---------------------------------------------------------------------------
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicy
+metadata:
+  name: file-monitoring-etc-shadow
+spec:
+  kprobes:
+    - call: "security_file_permission"
+      syscall: false
+      # return probe intentionally omitted: we post on the entry probe via the
+      # matchArgs selector below. Enabling `return: true` would require a
+      # returnArg, and `returnArgAction: Post` is unsupported in this version.
+      return: false
+      args:
+        - index: 0
+          type: "file" # (struct file *) used for path resolution
+        - index: 1
+          type: "int"  # 0x04 is MAY_READ, 0x02 is MAY_WRITE
+      # NOTE: no returnArg/returnArgAction. `returnArgAction: Post` is rejected by
+      # this Tetragon version ("ReturnArgAction type 'Post' unsupported") — Post is
+      # only valid for the socket-tracking actions. The matchArgs selector below
+      # already posts the event on the entry probe, so the return arg is not needed.
+      selectors:
+        # Path match only. The MAY_READ (index 1 == 4) mask filter was removed:
+        # security_file_permission's mask is a bitfield (MAY_READ may arrive as
+        # 4, 36, etc. depending on caller), so an Equal:"4" match silently drops
+        # most reads. Path-only is the reliable observation selector.
+        - matchArgs:
+            - index: 0
+              operator: "Equal"
+              values:
+                - "/etc/shadow"

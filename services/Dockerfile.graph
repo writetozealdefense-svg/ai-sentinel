@@ -1,0 +1,15 @@
+# syntax=docker/dockerfile:1
+# graph-svc (Phase 3 Interface 2) — port 8085
+FROM golang:1.26 AS builder
+WORKDIR /src
+COPY go.mod go.sum* ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" \
+    -o /out/graph-svc ./cmd/graph-svc
+
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=builder /out/graph-svc /graph-svc
+EXPOSE 8085
+USER nonroot:nonroot
+ENTRYPOINT ["/graph-svc"]

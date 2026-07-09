@@ -1,0 +1,22 @@
+framework: HIPAA
+displayName: "US Health Insurance Portability and Accountability Act — Security Rule"
+# Starter set uses publicly documented 45 CFR Part 164 references. Still marked for review.
+controls:
+  - controlId: "164.312(a)(1)"
+    title: "Access control"
+    description: "Technical policies limiting ePHI access to authorized persons/software."
+    mappedCategories: [PHI]
+    severity: high
+    review: "# REVIEW: verify control ID"
+  - controlId: "164.312(e)(1)"
+    title: "Transmission security"
+    description: "Guard against unauthorized access to ePHI transmitted over a network."
+    mappedCategories: [PHI]
+    severity: critical
+    review: "# REVIEW: verify control ID"
+  - controlId: "164.502(b)"
+    title: "Minimum necessary"
+    description: "Limit ePHI use/disclosure to the minimum necessary."
+    mappedCategories: [PHI]
+    severity: medium
+    review: "# REVIEW: verify control ID"

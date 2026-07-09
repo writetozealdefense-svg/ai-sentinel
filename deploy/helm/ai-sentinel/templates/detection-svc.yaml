@@ -1,0 +1,93 @@
+# ---------------------------------------------------------------------------
+# detection-svc — Python 3.11 / FastAPI / Presidio / YARA / spaCy (port 8000).
+#
+# securityContext: detection-svc/Dockerfile creates `appuser` uid 1001 and the
+# image already runs as it (USER appuser), so runAsNonRoot with runAsUser 1001
+# matches the image exactly.
+#
+# HONESTY EXCEPTION — readOnlyRootFilesystem is FALSE for this pod only:
+# the Python/spaCy/Presidio stack has not been verified to run with a
+# read-only root FS (native libs and model loaders may write caches under
+# $HOME or /tmp at import time). /tmp is still an emptyDir so the obvious
+# scratch path works either way; flipping the flag to true is a follow-up
+# once verified in-cluster. All other restricted-profile controls apply.
+# ---------------------------------------------------------------------------
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: detection-svc
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "detection-svc") | nindent 4 }}
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: detection-svc
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "detection-svc") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "ai-sentinel.selectorLabels" (dict "root" $ "component" "detection-svc") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ai-sentinel.labels" (dict "root" $ "component" "detection-svc") | nindent 8 }}
+    spec:
+      serviceAccountName: detection-svc
+      automountServiceAccountToken: false
+      # No service-link env injection: a Service named e.g. "neo4j" would inject
+      # NEO4J_PORT_* vars that the neo4j entrypoint fatally misparses as config.
+      enableServiceLinks: false
+      securityContext:
+        {{- include "ai-sentinel.podSecurityContext" (dict) | nindent 8 }}
+      containers:
+        - name: detection-svc
+          image: {{ .Values.detectionSvc.image }}
+          imagePullPolicy: {{ .Values.detectionSvc.imagePullPolicy }}
+          securityContext:
+            {{- include "ai-sentinel.containerSecurityContext" (dict "uid" 1001 "readOnlyRootFilesystem" false) | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8000
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          # /healthz is the same endpoint the compose healthcheck polls.
+          # spaCy model load makes startup slow: generous initial window.
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 6
+          resources:
+            {{- toYaml .Values.detectionSvc.resources | nindent 12 }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # Fixed name to match the compose service DNS name (http://detection-svc:8000).
+  name: detection-svc
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "detection-svc") | nindent 4 }}
+spec:
+  selector:
+    {{- include "ai-sentinel.selectorLabels" (dict "root" $ "component" "detection-svc") | nindent 4 }}
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http

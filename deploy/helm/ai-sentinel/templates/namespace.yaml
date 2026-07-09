@@ -1,0 +1,22 @@
+{{- /*
+Optional Namespace object. Default is namespace.manage=false: the operator
+creates the namespace with `helm install ... -n ai-sentinel --create-namespace`
+and then MUST label it for Pod Security Standards restricted enforcement
+(the exact command is printed in NOTES.txt after install).
+
+With --set namespace.manage=true the chart owns the Namespace and ships it
+pre-labeled — in that case install WITHOUT --create-namespace, or the two will
+fight over ownership of the same object.
+*/ -}}
+{{- if .Values.namespace.manage }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.namespace.name }}
+  labels:
+    app.kubernetes.io/part-of: ai-sentinel
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/audit: restricted
+{{- end }}

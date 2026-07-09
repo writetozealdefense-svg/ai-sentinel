@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zealdefense.ai/events/violation.raised.schema.json",
+  "title": "ai.violation.raised",
+  "type": "object",
+  "required": ["eventId", "violationId", "framework", "controlId", "severity", "category", "timestamp"],
+  "additionalProperties": false,
+  "properties": {
+    "eventId": { "type": "string", "format": "uuid" },
+    "violationId": { "type": "string", "format": "uuid" },
+    "promptId": { "type": "string", "format": "uuid" },
+    "agentId": { "type": "string" },
+    "userEmail": { "type": "string", "format": "email" },
+    "framework": {
+      "type": "string",
+      "enum": ["GDPR", "HIPAA", "ISO27001", "NIST_AI_RMF", "SAMA_CSF", "NCA_ECC", "PDPL", "DPDPA"]
+    },
+    "controlId": { "type": "string", "description": "Sourced from fixtures only (Brief R5)" },
+    "category": { "type": "string", "enum": ["PII", "PHI", "PCI", "SECRET", "CODE", "OTHER"] },
+    "severity": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+    "description": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" }
+  }
+}

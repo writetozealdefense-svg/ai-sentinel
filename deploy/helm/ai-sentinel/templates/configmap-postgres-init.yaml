@@ -1,0 +1,12 @@
+# Postgres schema bootstrap, mounted at /docker-entrypoint-initdb.d.
+# Embedded from files/postgres/001_init.sql — a copy of db/postgres/001_init.sql
+# (source of truth; ~7 KiB, far below the ~1 MiB ConfigMap cap).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "postgres") | nindent 4 }}
+data:
+  001_init.sql: |
+{{ .Files.Get "files/postgres/001_init.sql" | indent 4 }}

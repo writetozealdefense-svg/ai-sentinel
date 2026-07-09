@@ -1,0 +1,94 @@
+# ---------------------------------------------------------------------------
+# copilot-svc — Go, distroless static:nonroot (uid 65532), port 8086.
+# AI Security Copilot: deterministic OFFLINE RAG by default (Brief R3).
+# COPILOT_LIVE stays false on this path; no COPILOT_API_KEY is templated.
+# ---------------------------------------------------------------------------
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: copilot-svc
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "copilot-svc") | nindent 4 }}
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: copilot-svc
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "copilot-svc") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "ai-sentinel.selectorLabels" (dict "root" $ "component" "copilot-svc") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ai-sentinel.labels" (dict "root" $ "component" "copilot-svc") | nindent 8 }}
+    spec:
+      serviceAccountName: copilot-svc
+      automountServiceAccountToken: false
+      # No service-link env injection: a Service named e.g. "neo4j" would inject
+      # NEO4J_PORT_* vars that the neo4j entrypoint fatally misparses as config.
+      enableServiceLinks: false
+      securityContext:
+        {{- include "ai-sentinel.podSecurityContext" (dict) | nindent 8 }}
+      containers:
+        - name: copilot-svc
+          image: {{ .Values.copilotSvc.image }}
+          imagePullPolicy: {{ .Values.copilotSvc.imagePullPolicy }}
+          securityContext:
+            {{- include "ai-sentinel.containerSecurityContext" (dict "uid" 65532 "readOnlyRootFilesystem" true) | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8086
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ai-sentinel-secrets
+                  key: postgres-password
+            - name: DATABASE_URL
+              value: "postgres://{{ .Values.postgres.user }}:$(POSTGRES_PASSWORD)@postgres:5432/{{ .Values.postgres.database }}?sslmode=disable"
+            - name: COMPLIANCE_FIXTURES
+              value: "/fixtures/compliance"
+            - name: COPILOT_LIVE
+              value: {{ .Values.copilotSvc.live | quote }}
+          volumeMounts:
+            - name: compliance-fixtures
+              mountPath: /fixtures/compliance
+              readOnly: true
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 6
+          resources:
+            {{- toYaml .Values.copilotSvc.resources | nindent 12 }}
+      volumes:
+        - name: compliance-fixtures
+          configMap:
+            name: compliance-fixtures
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # Fixed name to match the compose service DNS name (http://copilot-svc:8086).
+  name: copilot-svc
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "copilot-svc") | nindent 4 }}
+spec:
+  selector:
+    {{- include "ai-sentinel.selectorLabels" (dict "root" $ "component" "copilot-svc") | nindent 4 }}
+  ports:
+    - name: http
+      port: 8086
+      targetPort: http

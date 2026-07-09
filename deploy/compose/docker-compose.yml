@@ -1,0 +1,247 @@
+# ZealDefense AI Sentinel — DEMO PATH (Brief R1).
+# Phase 0 skeleton: the four datastores only. Application services are layered in from
+# Phase 1 onward. `docker compose up` here is the conference demo path; Falco/Tetragon/
+# Kyverno are NOT here (they need a real kernel — see the Helm path, Phase 5).
+
+name: ai-sentinel
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sentinel-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      # host 15432 (container port 5432 kept; host remapped to avoid a clash with another
+      # project already bound to 5432 on this machine). In-cluster DSNs are unaffected;
+      # scenario scripts reach the DB via `docker exec sentinel-postgres psql`.
+      - "15432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../../db/postgres:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: sentinel-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  nats:
+    image: nats:2.10-alpine
+    container_name: sentinel-nats
+    # -js JetStream (durable VIOLATIONS stream); -m 8222 HTTP monitoring (healthz)
+    command: ["-js", "-m", "8222"]
+    ports:
+      - "4222:4222"   # client
+      - "8222:8222"   # monitoring / healthz
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:8222/healthz || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  neo4j:
+    image: neo4j:5-community
+    container_name: sentinel-neo4j
+    environment:
+      NEO4J_AUTH: ${NEO4J_AUTH}
+      NEO4J_PLUGINS: '["apoc"]'
+    ports:
+      - "7474:7474"   # HTTP browser
+      - "7687:7687"   # Bolt
+    volumes:
+      - neo4jdata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  # ---- Application services (Phase 1 vertical slice) ----
+
+  detection-svc:
+    build:
+      context: ../../detection-svc
+    container_name: sentinel-detection-svc
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://127.0.0.1:8000/healthz').status==200 else sys.exit(1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  opa:
+    image: openpolicyagent/opa:latest
+    container_name: sentinel-opa
+    command: ["run", "--server", "--addr=0.0.0.0:8181", "--log-level=error", "/policy"]
+    ports:
+      - "8181:8181"
+    volumes:
+      - ../../policy/opa:/policy:ro
+
+  discovery-svc:
+    build:
+      context: ../../services
+      dockerfile: Dockerfile.discovery
+    container_name: sentinel-discovery-svc
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+      NATS_URL: nats://nats:4222
+    ports:
+      # host 8091 (canonical container port 8081 kept; host remapped to avoid a clash with
+      # another project already bound to 8081 on this machine)
+      - "8091:8081"
+    depends_on:
+      postgres: { condition: service_healthy }
+      nats: { condition: service_healthy }
+
+  prompt-svc:
+    build:
+      context: ../../services
+      dockerfile: Dockerfile.prompt
+    container_name: sentinel-prompt-svc
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+      NATS_URL: nats://nats:4222
+      DETECTION_URL: http://detection-svc:8000
+      OPA_URL: http://opa:8181
+      COMPLIANCE_FIXTURES: /fixtures/compliance
+    volumes:
+      - ../../fixtures/compliance:/fixtures/compliance:ro
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres: { condition: service_healthy }
+      nats: { condition: service_healthy }
+      detection-svc: { condition: service_healthy }
+      opa: { condition: service_started }
+      discovery-svc: { condition: service_started }
+
+  compliance-svc:
+    build:
+      context: ../../services
+      dockerfile: Dockerfile.compliance
+    container_name: sentinel-compliance-svc
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+      NATS_URL: nats://nats:4222
+      COMPLIANCE_FIXTURES: /fixtures/compliance
+    volumes:
+      - ../../fixtures/compliance:/fixtures/compliance:ro
+    ports:
+      - "8084:8084"
+    depends_on:
+      postgres: { condition: service_healthy }
+      nats: { condition: service_healthy }
+
+  agent-svc:
+    build:
+      context: ../../services
+      dockerfile: Dockerfile.agent
+    container_name: sentinel-agent-svc
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+      NATS_URL: nats://nats:4222
+      COMPLIANCE_FIXTURES: /fixtures/compliance
+    volumes:
+      - ../../fixtures/compliance:/fixtures/compliance:ro
+    ports:
+      - "8083:8083"
+    depends_on:
+      postgres: { condition: service_healthy }
+      nats: { condition: service_healthy }
+
+  graph-svc:
+    build:
+      context: ../../services
+      dockerfile: Dockerfile.graph
+    container_name: sentinel-graph-svc
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+      NATS_URL: nats://nats:4222
+      NEO4J_URL: bolt://neo4j:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: sentinel_dev_pw
+    ports:
+      - "8085:8085"
+    depends_on:
+      postgres: { condition: service_healthy }
+      nats: { condition: service_healthy }
+      neo4j: { condition: service_healthy }
+
+  copilot-svc:
+    build:
+      context: ../../services
+      dockerfile: Dockerfile.copilot
+    container_name: sentinel-copilot-svc
+    # AI Security Copilot — deterministic OFFLINE RAG by default (Brief R3). Live LLM only
+    # behind COPILOT_LIVE=true + COPILOT_API_KEY (never set on the demo path).
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+      COMPLIANCE_FIXTURES: /fixtures/compliance
+      COPILOT_LIVE: ${COPILOT_LIVE:-false}
+    volumes:
+      - ../../fixtures/compliance:/fixtures/compliance:ro
+    ports:
+      - "8086:8086"
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  telemetry-generator:
+    build:
+      context: ../../services
+      dockerfile: Dockerfile.telemetry
+    container_name: sentinel-telemetry-generator
+    # SIMULATED Falco/Tetragon runtime-event feed for the SOC dashboard (Brief R1 — no live
+    # kernel telemetry on the compose path). Replaced by real Falco on the Helm path (Phase 5).
+    environment:
+      NATS_URL: nats://nats:4222
+    ports:
+      - "8087:8087"
+    depends_on:
+      nats: { condition: service_healthy }
+
+  frontend:
+    build:
+      context: ../../frontend
+    container_name: sentinel-frontend
+    environment:
+      PROMPT_SVC_URL: http://prompt-svc:8082
+      DISCOVERY_SVC_URL: http://discovery-svc:8081
+      COMPLIANCE_SVC_URL: http://compliance-svc:8084
+      RUNTIME_SVC_URL: http://telemetry-generator:8087
+      AGENT_SVC_URL: http://agent-svc:8083
+      GRAPH_SVC_URL: http://graph-svc:8085
+      COPILOT_SVC_URL: http://copilot-svc:8086
+    ports:
+      # host 3100 (container port 3000 kept; host remapped to avoid a clash with another
+      # project already bound to 3000 on this machine)
+      - "3100:3000"
+    depends_on:
+      prompt-svc: { condition: service_started }
+      discovery-svc: { condition: service_started }
+      compliance-svc: { condition: service_started }
+      telemetry-generator: { condition: service_started }
+
+volumes:
+  pgdata:
+  neo4jdata:

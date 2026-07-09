@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zealdefense.ai/events/runtime.observed.schema.json",
+  "title": "ai.runtime.observed",
+  "type": "object",
+  "required": ["eventId", "source", "rule", "priority", "message", "simulated", "timestamp"],
+  "additionalProperties": false,
+  "properties": {
+    "eventId": { "type": "string", "format": "uuid" },
+    "source": { "type": "string", "enum": ["falco", "tetragon"] },
+    "rule": { "type": "string" },
+    "priority": { "type": "string", "enum": ["info", "notice", "warning", "error", "critical"] },
+    "message": { "type": "string" },
+    "namespace": { "type": "string" },
+    "pod": { "type": "string" },
+    "container": { "type": "string" },
+    "simulated": {
+      "type": "boolean",
+      "description": "true on the compose path (synthetic); false only on the Helm path fed by real Falco (RUNTIME_MODE=ingest)"
+    },
+    "timestamp": { "type": "string", "format": "date-time" }
+  }
+}

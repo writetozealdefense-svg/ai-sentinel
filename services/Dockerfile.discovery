@@ -1,0 +1,15 @@
+# syntax=docker/dockerfile:1
+# discovery-svc (Interface 5) — port 8081
+FROM golang:1.26 AS builder
+WORKDIR /src
+COPY go.mod go.sum* ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" \
+    -o /out/discovery-svc ./cmd/discovery-svc
+
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=builder /out/discovery-svc /discovery-svc
+EXPOSE 8081
+USER nonroot:nonroot
+ENTRYPOINT ["/discovery-svc"]

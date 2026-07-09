@@ -1,0 +1,110 @@
+# ---------------------------------------------------------------------------
+# neo4j — single replica on emptyDir: DEMO cluster only, NOT production HA.
+#
+# securityContext: neo4j:5-community ships user `neo4j` as uid/gid 7474 and
+# runs unprivileged when started as that uid.
+#
+# HONESTY EXCEPTION — readOnlyRootFilesystem is FALSE for this pod only:
+# the image entrypoint rewrites /var/lib/neo4j/conf at startup and, with
+# NEO4J_PLUGINS='["apoc"]' (compose parity), downloads the APOC jar into
+# /var/lib/neo4j/plugins. Making the root FS read-only would require
+# enumerating and emptyDir-mounting several image-internal paths that the
+# entrypoint owns; not worth faking on a demo cluster. Everything else in the
+# restricted profile (runAsNonRoot, no privilege escalation, drop ALL,
+# RuntimeDefault seccomp) still applies. /data and /logs are emptyDirs.
+# ---------------------------------------------------------------------------
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: neo4j
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "neo4j") | nindent 4 }}
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neo4j
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "neo4j") | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "ai-sentinel.selectorLabels" (dict "root" $ "component" "neo4j") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ai-sentinel.labels" (dict "root" $ "component" "neo4j") | nindent 8 }}
+    spec:
+      serviceAccountName: neo4j
+      automountServiceAccountToken: false
+      # No service-link env injection: a Service named e.g. "neo4j" would inject
+      # NEO4J_PORT_* vars that the neo4j entrypoint fatally misparses as config.
+      enableServiceLinks: false
+      securityContext:
+        {{- include "ai-sentinel.podSecurityContext" (dict "fsGroup" 7474) | nindent 8 }}
+      containers:
+        - name: neo4j
+          image: {{ .Values.neo4j.image }}
+          imagePullPolicy: {{ .Values.neo4j.imagePullPolicy }}
+          securityContext:
+            {{- include "ai-sentinel.containerSecurityContext" (dict "uid" 7474 "readOnlyRootFilesystem" false) | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 7474
+            - name: bolt
+              containerPort: 7687
+          env:
+            - name: NEO4J_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: ai-sentinel-secrets
+                  key: neo4j-auth
+            - name: NEO4J_PLUGINS
+              value: {{ .Values.neo4j.plugins | quote }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: logs
+              mountPath: /logs
+          # Neo4j is slow to start (plugin download + JVM warmup): generous windows.
+          readinessProbe:
+            tcpSocket:
+              port: bolt
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 18
+          livenessProbe:
+            tcpSocket:
+              port: bolt
+            initialDelaySeconds: 120
+            periodSeconds: 15
+            failureThreshold: 6
+          resources:
+            {{- toYaml .Values.neo4j.resources | nindent 12 }}
+      volumes:
+        - name: data
+          emptyDir: {} # demo only — graph data lost on rescheduling
+        - name: logs
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # Fixed name to match the compose service DNS name (bolt://neo4j:7687).
+  name: neo4j
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "neo4j") | nindent 4 }}
+spec:
+  selector:
+    {{- include "ai-sentinel.selectorLabels" (dict "root" $ "component" "neo4j") | nindent 4 }}
+  ports:
+    - name: http
+      port: 7474
+      targetPort: http
+    - name: bolt
+      port: 7687
+      targetPort: bolt

@@ -1,0 +1,75 @@
+openapi: 3.1.0
+info:
+  title: ZealDefense AI Sentinel — Runtime Events API (SIMULATED)
+  version: 0.1.0
+  description: >
+    The telemetry-generator's runtime-security feed. On the docker-compose DEMO PATH there is
+    NO live kernel telemetry — Falco/Tetragon need eBPF and a real node (Brief R1). This service
+    emits SIMULATED Falco/Tetragon-style events to populate the SOC dashboard's runtime widgets.
+    EVERY event carries `simulated: true` and the UI labels the feed SIMULATED. On the Helm
+    hardening path (Phase 5) this feed is replaced by real Falco events.
+servers:
+  - url: http://localhost:8087
+    description: telemetry-generator (compose path)
+tags:
+  - name: runtime
+security:
+  - oidc: []
+paths:
+  /healthz:
+    get:
+      operationId: runtimeHealth
+      tags: [runtime]
+      summary: Liveness probe
+      responses:
+        '200':
+          description: Healthy
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+  /runtime/events:
+    get:
+      operationId: listRuntimeEvents
+      tags: [runtime]
+      summary: Recent SIMULATED runtime-security events (newest first)
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, default: 50, maximum: 200 } }
+        - { name: source, in: query, schema: { type: string, enum: [falco, tetragon] } }
+      responses:
+        '200':
+          description: Events
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/RuntimeEvent' }
+components:
+  securitySchemes:
+    oidc:
+      type: openIdConnect
+      openIdConnectUrl: http://localhost:8080/realms/ai-sentinel/.well-known/openid-configuration
+  schemas:
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [ok] }
+        service: { type: string }
+    RuntimeEvent:
+      type: object
+      required: [eventId, source, rule, priority, message, simulated, timestamp]
+      properties:
+        eventId: { type: string, format: uuid }
+        source: { type: string, enum: [falco, tetragon] }
+        rule: { type: string, description: 'e.g. "Terminal shell in container"' }
+        priority: { type: string, enum: [info, notice, warning, error, critical] }
+        message: { type: string }
+        namespace: { type: string }
+        pod: { type: string }
+        container: { type: string }
+        simulated:
+          type: boolean
+          description: >-
+            true on the compose path (synthetic); false only on the Helm path fed by real
+            Falco (RUNTIME_MODE=ingest).
+        timestamp: { type: string, format: date-time }

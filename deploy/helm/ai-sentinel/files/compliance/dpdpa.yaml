@@ -1,0 +1,11 @@
+framework: DPDPA
+displayName: "India Digital Personal Data Protection Act (DPDPA) 2023"
+# Brief R5: DPDPA section numbers are NOT populated from memory. The product owner must supply
+# authoritative controlId values. Do not guess them.
+controls:
+  - controlId: "TODO-VERIFY"
+    title: "Reasonable security safeguards (placeholder)"
+    description: "Map to the relevant DPDPA section on safeguards against personal-data breach."
+    mappedCategories: [PII, PHI]
+    severity: high
+    review: "# REVIEW: verify control ID — product owner to supply authoritative DPDPA section"

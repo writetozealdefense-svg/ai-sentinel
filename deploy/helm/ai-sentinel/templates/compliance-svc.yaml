@@ -1,0 +1,93 @@
+# ---------------------------------------------------------------------------
+# compliance-svc — Go, distroless static:nonroot (uid 65532), port 8084.
+# Reads compliance fixtures from the ConfigMap at /fixtures/compliance.
+# ---------------------------------------------------------------------------
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: compliance-svc
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "compliance-svc") | nindent 4 }}
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: compliance-svc
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "compliance-svc") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "ai-sentinel.selectorLabels" (dict "root" $ "component" "compliance-svc") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ai-sentinel.labels" (dict "root" $ "component" "compliance-svc") | nindent 8 }}
+    spec:
+      serviceAccountName: compliance-svc
+      automountServiceAccountToken: false
+      # No service-link env injection: a Service named e.g. "neo4j" would inject
+      # NEO4J_PORT_* vars that the neo4j entrypoint fatally misparses as config.
+      enableServiceLinks: false
+      securityContext:
+        {{- include "ai-sentinel.podSecurityContext" (dict) | nindent 8 }}
+      containers:
+        - name: compliance-svc
+          image: {{ .Values.complianceSvc.image }}
+          imagePullPolicy: {{ .Values.complianceSvc.imagePullPolicy }}
+          securityContext:
+            {{- include "ai-sentinel.containerSecurityContext" (dict "uid" 65532 "readOnlyRootFilesystem" true) | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8084
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ai-sentinel-secrets
+                  key: postgres-password
+            - name: DATABASE_URL
+              value: "postgres://{{ .Values.postgres.user }}:$(POSTGRES_PASSWORD)@postgres:5432/{{ .Values.postgres.database }}?sslmode=disable"
+            - name: NATS_URL
+              value: "nats://nats:4222"
+            - name: COMPLIANCE_FIXTURES
+              value: "/fixtures/compliance"
+          volumeMounts:
+            - name: compliance-fixtures
+              mountPath: /fixtures/compliance
+              readOnly: true
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 6
+          resources:
+            {{- toYaml .Values.complianceSvc.resources | nindent 12 }}
+      volumes:
+        - name: compliance-fixtures
+          configMap:
+            name: compliance-fixtures
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # Fixed name to match the compose service DNS name (http://compliance-svc:8084).
+  name: compliance-svc
+  labels:
+    {{- include "ai-sentinel.labels" (dict "root" $ "component" "compliance-svc") | nindent 4 }}
+spec:
+  selector:
+    {{- include "ai-sentinel.selectorLabels" (dict "root" $ "component" "compliance-svc") | nindent 4 }}
+  ports:
+    - name: http
+      port: 8084
+      targetPort: http

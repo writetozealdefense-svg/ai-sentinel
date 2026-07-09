@@ -1,0 +1,11 @@
+framework: PDPL
+displayName: "Saudi Personal Data Protection Law (PDPL)"
+# Brief R5: PDPL article numbers are NOT populated from memory. The product owner must supply
+# authoritative controlId values. Do not guess them.
+controls:
+  - controlId: "TODO-VERIFY"
+    title: "Protection of personal data (placeholder)"
+    description: "Map to the relevant PDPL article for unauthorized disclosure of personal data."
+    mappedCategories: [PII, PHI]
+    severity: high
+    review: "# REVIEW: verify control ID — product owner to supply authoritative PDPL article"
