@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AI Sentinel — narrated CLI demo</title>
+<style>
+  :root {
+    --bg: #0b0f14; --panel: #0d1117; --edge: #1f2733;
+    --fg: #c9d1d9; --dim: #8b949e; --cyan: #58d6ff; --green: #3fb950;
+    --red: #f85149; --amber: #d29922; --purple: #bc8cff; --prompt: #7ee787;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; background: var(--bg); font-family: 'Cascadia Code','JetBrains Mono',Consolas,monospace; }
+  #stage { height: 100%; display: flex; flex-direction: column; padding: 3vh 6vw; }
+
+  #titlebar { display: flex; align-items: center; gap: 8px; background: var(--edge);
+    border-radius: 10px 10px 0 0; padding: 10px 14px; color: var(--dim); font-size: 13px; }
+  #titlebar .dot { width: 12px; height: 12px; border-radius: 50%; }
+  #term { flex: 1; background: var(--panel); border: 1px solid var(--edge); border-top: none;
+    border-radius: 0 0 10px 10px; padding: 22px 26px; overflow: hidden;
+    font-size: clamp(13px, 1.4vw, 18px); line-height: 1.5; color: var(--fg); white-space: pre-wrap; }
+  #term .banner { color: var(--cyan); font-weight: bold; }
+  #term .prompt { color: var(--prompt); }
+  #term .dim    { color: var(--dim); }
+  #term .ok     { color: var(--green); font-weight: bold; }
+  #term .block  { color: var(--red); font-weight: bold; }
+  #term .warn   { color: var(--amber); }
+  #term .sim    { color: var(--purple); }
+  #cursor { display: inline-block; width: 0.55em; height: 1.1em; background: var(--fg);
+    vertical-align: text-bottom; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  #caption { margin-top: 2.2vh; min-height: 3.2em; display: flex; align-items: center; justify-content: center;
+    text-align: center; color: #e6edf3; font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: clamp(15px, 1.9vw, 24px); font-weight: 500; text-wrap: balance; }
+  #caption em { color: var(--cyan); font-style: normal; }
+
+  #progress { height: 4px; background: var(--edge); border-radius: 2px; margin-top: 1.6vh; }
+  #bar { height: 100%; width: 0%; background: var(--cyan); border-radius: 2px; transition: width .4s linear; }
+
+  #pauseTag { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 8;
+    background: rgba(210,153,34,.15); border: 1px solid var(--amber); color: var(--amber);
+    font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; font-weight: 600;
+    padding: 6px 16px; border-radius: 999px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  #pauseTag.show { opacity: 1; }
+
+  .card { position: fixed; inset: 0; z-index: 6; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; gap: 10px;
+    font-family: 'Segoe UI', system-ui, sans-serif; opacity: 0; pointer-events: none;
+    transition: opacity .6s ease; background:
+      radial-gradient(1200px 600px at 50% 40%, #141024 0%, var(--bg) 70%); }
+  .card.show { opacity: 1; }
+  .card .shield { font-size: clamp(40px, 6vw, 84px); filter: drop-shadow(0 0 22px rgba(188,140,255,.45)); }
+  .card .wordmark { font-size: clamp(38px, 7vw, 92px); font-weight: 800; letter-spacing: -1px;
+    background: linear-gradient(92deg, #bc8cff, #58d6ff 60%, #7ee787);
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .card .tag { color: var(--fg); font-size: clamp(16px, 2.2vw, 27px); font-weight: 500; max-width: 26ch; }
+  .card .meta { color: var(--dim); font-size: clamp(13px, 1.5vw, 18px); }
+  .card .url { color: var(--cyan); font-family: 'Cascadia Code', monospace;
+    font-size: clamp(14px, 1.7vw, 22px); margin-top: 8px; }
+  .card .recap { color: var(--green); font-weight: 600; font-size: clamp(15px, 1.9vw, 23px); max-width: 30ch; }
+  .card .badge { margin-top: 10px; color: var(--dim); font-size: clamp(12px, 1.4vw, 16px);
+    border: 1px solid var(--edge); border-radius: 999px; padding: 6px 16px; }
+  .card.show .wordmark { animation: rise .8s ease both; }
+  .card.show .tag, .card.show .recap { animation: rise .8s .15s ease both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+
+  #controls { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(4,8,12,.82); backdrop-filter: blur(3px); z-index: 10;
+    font-family: 'Segoe UI', system-ui, sans-serif; }
+  #controls.hidden { display: none; }
+  #panelbox { text-align: center; color: var(--fg); max-width: 660px; padding: 24px; }
+  #panelbox h1 { font-size: 30px; margin-bottom: 6px; color: #fff; }
+  #panelbox .sub { color: var(--dim); margin-bottom: 26px; }
+  button.big { font-size: 20px; padding: 12px 44px; border-radius: 999px; border: none; cursor: pointer;
+    background: var(--cyan); color: #05222e; font-weight: 700; }
+  .row { margin-top: 18px; display: flex; gap: 14px; justify-content: center; align-items: center;
+    color: var(--dim); font-size: 14px; flex-wrap: wrap; }
+  select { background: var(--panel); color: var(--fg); border: 1px solid var(--edge); border-radius: 6px; padding: 4px 8px; max-width: 340px; }
+  .hint { margin-top: 22px; color: var(--dim); font-size: 13px; }
+  kbd { background: var(--edge); border-radius: 4px; padding: 1px 7px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="titlebar">
+    <span class="dot" style="background:#ff5f57"></span>
+    <span class="dot" style="background:#febc2e"></span>
+    <span class="dot" style="background:#28c840"></span>
+    <span style="margin-left:8px">soc@sentinel — ZealDefense AI Sentinel: discover · govern · secure</span>
+  </div>
+  <div id="term"><span id="out"></span><span id="cursor"></span></div>
+  <div id="caption"></div>
+  <div id="progress"><div id="bar"></div></div>
+</div>
+<div id="pauseTag">⏸ paused — press Space to resume</div>
+
+<div id="introCard" class="card">
+  <div class="shield">🛡️</div>
+  <div class="wordmark">AI Sentinel</div>
+  <div class="tag">Shadow-AI discovery, DLP, agent security &amp; compliance — every AI interaction</div>
+  <div class="meta">a live command-line walkthrough</div>
+</div>
+
+<div id="outroCard" class="card">
+  <div class="wordmark">AI Sentinel</div>
+  <div class="recap">Real detection. Agent risk. An offline copilot. Honestly labelled.</div>
+  <div class="url">github.com/writetozealdefense-svg/ai-sentinel</div>
+  <div class="badge">Apache-2.0 · Presidio + YARA + OPA · detection is real, telemetry is SIMULATED</div>
+</div>
+
+<div id="controls">
+  <div id="panelbox">
+    <h1>ZealDefense AI Sentinel</h1>
+    <div class="sub">Employees are pasting customer data into ChatGPT. This is the control loop: discover it, inspect it with real DLP, score agent risk, and explain it — offline. Narrated CLI demo (~3.5 min).</div>
+    <button class="big" id="playBtn">▶ Play with voice-over</button>
+    <div class="row">
+      <label><input type="checkbox" id="voiceOn" checked> AI voice-over</label>
+      <select id="voiceSel" title="voice"></select>
+      <label>speed <select id="rateSel"><option>0.9</option><option selected>1</option><option>1.1</option></select></label>
+    </div>
+    <div class="hint">Fullscreen (<kbd>F11</kbd>), start your recorder with <b>desktop audio</b>, press Play.
+      <kbd>Space</kbd> pause/resume · <kbd>R</kbd> restart · <kbd>Esc</kbd> menu.</div>
+  </div>
+</div>
+
+<script>
+/* ── Narrated demo. All terminal output below is REAL, captured from the
+     Gate 1–5 verification runs recorded in VERIFICATION.md (docker-compose
+     stack: detection-svc + OPA + prompt/agent/graph/copilot-svc + datastores). ── */
+
+const BEATS = [
+  {
+    say: "Employees are pasting customer databases into ChatGPT, patient records into Gemini, payroll into Copilot. Most security teams can't even see it. AI Sentinel is the control loop that can. Let's watch one prompt.",
+    caption: "Sensitive data is flowing into public AI tools — <em>invisibly.</em> AI Sentinel sees it.",
+    steps: [
+      { t: "banner", s: "════════════════════════════════════════════════════════\n  ZealDefense AI Sentinel — discover · govern · secure\n════════════════════════════════════════════════════════\n" },
+      { t: "line", cls: "dim", s: "stack : detection-svc (Presidio+YARA+regex) · OPA · Neo4j · offline copilot" },
+      { t: "line", cls: "dim", s: "R4    : detection is REAL; runtime telemetry is synthetic, labelled SIMULATED\n" },
+    ]
+  },
+  {
+    say: "Beat one. Detect. An employee uploads a customer database to ChatGPT. The detection service — real Microsoft Presidio, not a script — finds one hundred thirteen sensitive items: a hundred P-I-I, ten payment-card. And O-P-A returns a decision: block.",
+    caption: "<em>Detect</em>: real Presidio finds 113 sensitive items → OPA decides <em>BLOCK</em>.",
+    steps: [
+      { t: "banner", s: "\n════ BEAT 1 — DETECT (real DLP) ════\n" },
+      { t: "cmd",  s: "./scripts/scenario-1.sh    # customer_database.csv → ChatGPT" },
+      { t: "line", s: 'POST /scan → stats: {"totalFindings":113,"byCategory":{"PII":100,"PCI":10,"OTHER":3}}' },
+      { t: "line", s: "  {type: EMAIL_ADDRESS, category: PII, engine: presidio, score: 1.0}" },
+      { t: "block",s: "  {type: CREDIT_CARD,   category: PCI, engine: presidio, score: 1.0}" },
+      { t: "line", cls: "dim", s: "  engines healthy: presidio 27 · yara 12 · regex 8" },
+      { t: "cmd",  s: "POST /v1/data/sentinel/dlp/decision    # OPA" },
+      { t: "block",s: '  {"action":"BLOCK","reasons":["PCI data (10) + bulk PII (113) to unsanctioned AI chatgpt"]}\n' },
+    ]
+  },
+  {
+    say: "Beat two. Govern. The orchestrator turns that into one decision, scored and explained. Risk one hundred out of a hundred. The payload comes back redacted — credit cards and emails masked in place. And the violation is mapped to compliance frameworks it can actually cite.",
+    caption: "<em>Govern</em>: risk 100/100, payload redacted in place, mapped to frameworks.",
+    steps: [
+      { t: "banner", s: "\n════ BEAT 2 — GOVERN (score · redact · map) ════\n" },
+      { t: "cmd",  s: "POST /prompts/inspect" },
+      { t: "block",s: "  decision : BLOCK      riskScore : 100" },
+      { t: "line", cls: "dim", s: "  score    : severity 35 [PCI] + volume 40 + confidence 15 + unsanctioned 10" },
+      { t: "line", s: '  redacted : James Wilson,<EMAIL_ADDRESS> [REDACTED],…,<CREDIT_CARD> [REDACTED]' },
+      { t: "line", s: "  violations mapped from fixtures (control IDs never invented):" },
+      { t: "warn", s: "    GDPR Art.5(1)(f) · ISO27001 A.5.34 · NIST_AI_RMF GOVERN 1.1   (high)" },
+      { t: "sim",  s: "    PDPL · NCA_ECC · SAMA_CSF · DPDPA = TODO-VERIFY  (regional: placeholder, not faked)\n" },
+    ]
+  },
+  {
+    say: "Beat three. Agents. It's not just prompts — autonomous agents wield tools. This one calls Jira, GitHub, Salesforce, touches sensitive data, then escalates privilege. Its risk score climbs — twelve, twenty-four, thirty-six, fifty-one, seventy-six — crossing the threshold on the last step, and raising exactly one violation. The risk graph shows the path.",
+    caption: "<em>Agent risk</em>: score climbs 12→76, crosses 70 → exactly one violation. The graph shows the path.",
+    steps: [
+      { t: "banner", s: "\n════ BEAT 3 — AGENT SECURITY + RISK GRAPH ════\n" },
+      { t: "cmd",  s: "./scripts/scenario-5.sh    # agent finops-crew-01 (SIMULATED telemetry)" },
+      { t: "line", s: ">> 1/5 tool_call jira                       riskScore 12" },
+      { t: "line", s: ">> 2/5 tool_call github                     riskScore 24" },
+      { t: "line", s: ">> 3/5 tool_call salesforce                 riskScore 36" },
+      { t: "warn", s: ">> 4/5 data_access salesforce (sensitive)   riskScore 51" },
+      { t: "block",s: ">> 5/5 privilege_escalation (org admin)     riskScore 76   ← threshold 70 crossed" },
+      { t: "line", cls: "dim", s: "violations where agent_id set → 1  (fires on the <70→≥70 crossing only)" },
+      { t: "cmd",  s: "POST /graph/query/phi-to-unauthorized-ai    # Neo4j" },
+      { t: "block",s: "  nurse.joy@example.com | gemini | patient_records.csv | risk 100 | BLOCK\n" },
+    ]
+  },
+  {
+    say: "Beat four. Explain — offline. The security copilot answers in plain language, grounded only in the platform's own data. Which agent is the riskiest? It names finops-crew-01, score seventy-six, with the real risk factors and citations. No external model, no API key — it runs air-gapped. Ask it the weather, and it refuses to guess.",
+    caption: "<em>Offline copilot</em>: grounded answers + citations, air-gapped. It won't hallucinate.",
+    steps: [
+      { t: "banner", s: "\n════ BEAT 4 — AI SECURITY COPILOT (offline RAG) ════\n" },
+      { t: "cmd",  s: "GET /healthz" },
+      { t: "ok",   s: '  {"mode":"offline","status":"ok"}      # no COPILOT_API_KEY anywhere' },
+      { t: "cmd",  s: 'POST /copilot/ask  "Which agent is the riskiest?"' },
+      { t: "line", s: '  "FinOps Automation Crew (finops-crew-01) … risk score 76/100. Risk factors:' },
+      { t: "line", s: '   3 tools (jira, github, salesforce); sensitive data access; privilege escalation."' },
+      { t: "line", cls: "dim", s: "  citations: violation + control + finding rows (grounded, not generated)" },
+      { t: "cmd",  s: 'POST /copilot/ask  "what is the weather in dubai"' },
+      { t: "ok",   s: '  capability-list fallback, citations: []   ← never hallucinates\n' },
+    ]
+  },
+  {
+    say: "And beat five — the part most demos hide. Honesty is built in. The detection is real. The runtime telemetry is synthetic, and labelled SIMULATED everywhere. Compliance mappings are indicative, not a certification — and regional controls the team hasn't verified stay marked TODO-VERIFY, never invented. That's a platform you can actually trust on stage.",
+    caption: "<em>Honesty by design</em>: real detection, SIMULATED telemetry, no invented controls.",
+    steps: [
+      { t: "banner", s: "\n════ BEAT 5 — HONESTY BY DESIGN ════\n" },
+      { t: "cmd",  s: 'POST /copilot/ask  "What is our compliance posture?"' },
+      { t: "line", s: "  open violations per framework (real counts):" },
+      { t: "line", s: "  GDPR 14 · ISO27001 14 · NIST_AI_RMF 15 · HIPAA 2 · PDPL 14 · SAMA_CSF 14 …" },
+      { t: "sim",  s: "  regional frameworks still carry TODO-VERIFY until the product owner confirms" },
+      { t: "sim",  s: "  agent + runtime telemetry badged SIMULATED (Brief R4) in code, data and UI" },
+      { t: "ok",   s: "  detection: REAL (Presidio + YARA + OPA) · copilot: OFFLINE by default\n" },
+    ]
+  },
+  {
+    say: "Discover shadow AI. Inspect prompts with real DLP. Score autonomous agents. Explain it all, offline. And never fake a single number. AI Sentinel. Open source, Apache 2.0.",
+    caption: "Discover · govern · secure — every AI interaction. <em>Apache-2.0 open source.</em>",
+    steps: [
+      { t: "banner", s: "\n════════════════════════════════════════════════════════\n  discover · govern · secure — every AI interaction\n  github.com/writetozealdefense-svg/ai-sentinel\n════════════════════════════════════════════════════════\n" },
+    ]
+  },
+];
+
+/* ── engine (shared across the ZealDefense demo players) ── */
+const out = document.getElementById('out'), cap = document.getElementById('caption'),
+      bar = document.getElementById('bar'), controls = document.getElementById('controls'),
+      term = document.getElementById('term');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+let playing = false, paused = false;
+async function gate(){ while (paused && playing) await sleep(60); }
+async function psleep(ms){ let e = 0; while (e < ms && playing){ await sleep(40); if (!paused) e += 40; } }
+
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function append(html){ out.insertAdjacentHTML('beforeend', html); term.scrollTop = term.scrollHeight; }
+
+async function typeCmd(s){
+  append('<span class="prompt">soc@sentinel:~$ </span>');
+  for (const ch of s){ await gate(); append(esc(ch)); await sleep(1000/34); }
+  append('\n'); await psleep(260);
+}
+async function playSteps(steps){
+  for (const st of steps){
+    await gate();
+    if (st.t === 'cmd')      await typeCmd(st.s);
+    else if (st.t === 'banner'){ append('<span class="banner">'+esc(st.s)+'</span>\n'); await psleep(320); }
+    else { append('<span class="'+(st.cls||'')+'">'+esc(st.s)+'</span>\n'); await psleep(300); }
+  }
+}
+
+function pickVoice(){
+  const sel = document.getElementById('voiceSel');
+  return speechSynthesis.getVoices().find(v => v.name === sel.value) || null;
+}
+function speak(text){
+  return new Promise(res => {
+    if (!document.getElementById('voiceOn').checked || !('speechSynthesis' in window)) return res();
+    const u = new SpeechSynthesisUtterance(text);
+    const v = pickVoice(); if (v) u.voice = v;
+    u.rate = parseFloat(document.getElementById('rateSel').value);
+    u.onend = res; u.onerror = res;
+    speechSynthesis.speak(u);
+  });
+}
+
+const showCard = id => document.getElementById(id).classList.add('show');
+const hideCard = id => document.getElementById(id).classList.remove('show');
+function hideCards(){ hideCard('introCard'); hideCard('outroCard'); }
+
+async function run(){
+  playing = true; paused = false; out.innerHTML = ''; cap.innerHTML = ''; bar.style.width = '0%';
+  document.getElementById('pauseTag').classList.remove('show'); hideCards();
+
+  showCard('introCard'); await psleep(3600); if (!playing) return;
+  hideCard('introCard'); await psleep(650);
+
+  const content = BEATS.slice(0, -1);
+  for (let i = 0; i < content.length && playing; i++){
+    const b = content[i];
+    cap.innerHTML = b.caption;
+    const narration = speak(b.say);
+    await playSteps(b.steps);
+    await narration;
+    bar.style.width = Math.round(100*(i+1)/BEATS.length) + '%';
+    await psleep(550);
+  }
+
+  if (playing){
+    const close = BEATS[BEATS.length - 1];
+    cap.innerHTML = '';
+    showCard('outroCard');
+    bar.style.width = '100%';
+    await speak(close.say);
+    await psleep(1600);
+  }
+}
+
+function populateVoices(){
+  const sel = document.getElementById('voiceSel');
+  const vs = speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+  vs.sort((a,b) => (b.name.includes('Natural')||b.name.includes('Online')) - (a.name.includes('Natural')||a.name.includes('Online')));
+  sel.innerHTML = vs.map(v => `<option>${v.name}</option>`).join('');
+}
+if ('speechSynthesis' in window){ populateVoices(); speechSynthesis.onvoiceschanged = populateVoices; }
+
+document.getElementById('playBtn').onclick = () => { controls.classList.add('hidden'); run(); };
+addEventListener('keydown', e => {
+  if (e.key === ' ' || e.code === 'Space'){
+    e.preventDefault(); if (!playing) return;
+    paused = !paused;
+    document.getElementById('pauseTag').classList.toggle('show', paused);
+    if (paused) speechSynthesis.pause(); else speechSynthesis.resume();
+  }
+  if (e.key === 'Escape'){ playing = false; paused = false; speechSynthesis.cancel(); hideCards(); document.getElementById('pauseTag').classList.remove('show'); controls.classList.remove('hidden'); }
+  if (e.key === 'r' || e.key === 'R'){ playing = false; paused = false; speechSynthesis.cancel(); hideCards(); document.getElementById('pauseTag').classList.remove('show'); setTimeout(()=>{ controls.classList.add('hidden'); run(); }, 60); }
+});
+</script>
+</body>
+</html>
