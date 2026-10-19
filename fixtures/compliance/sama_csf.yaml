@@ -1,11 +1,79 @@
 framework: SAMA_CSF
-displayName: "Saudi Central Bank (SAMA) Cyber Security Framework"
-# Brief R5: SAMA CSF clause numbers are NOT populated from memory. The product owner must
-# supply authoritative controlId values. Do not guess them.
+displayName: "Saudi Central Bank (SAMA) Cyber Security Framework v1.0"
+# Populated 2026-08-10. Document: "Cyber Security Framework", SAMA, Version 1.0, May 2017
+# (Circular 381000091275 of 24/05/2017). Still in force; NO v2.0 exists as of Aug 2026.
+# Applies to all SAMA-regulated Member Organizations (banks, insurers, financing companies,
+# credit bureaus, FMI).
+#   Official HTML: https://rulebook.sama.gov.sa/en/cyber-security-framework-2
+#   Official PDF:  https://www.sama.gov.sa/en-US/RulesInstructions/CyberSecurity/Cyber%20Security%20Framework.pdf
+# Verification caveat: sama.gov.sa PDF endpoint errored during research; text verified from
+# two independent mirror copies of the official v1.0 PDF, numbering cross-confirmed on the
+# official SAMA Rulebook pages. 3.3.8(6a) is the framework's only explicit "data-leakage
+# prevention [DLP]" mandate; 3.3.6(5d) ties customer-data protection to classification.
 controls:
-  - controlId: "TODO-VERIFY"
-    title: "Data protection / information leakage (placeholder)"
-    description: "Map to the relevant SAMA CSF control for sensitive-data protection."
+  - controlId: "3.3.8"
+    title: "Infrastructure Security — incl. data-leakage prevention (6a)"
+    description: "Security standards for all infrastructure components must be defined, implemented and monitored; consideration 6a explicitly mandates data-leakage prevention (DLP), event monitoring and IAM controls. The CSF's primary anchor for blocking sensitive-data egress to external AI tools."
+    mappedCategories: [PII, PCI, SECRET, CODE]
+    severity: critical
+    review: "# REVIEW: verified from official v1.0 PDF text (via mirrors; Rulebook numbering confirmed) — product owner to confirm"
+  - controlId: "3.3.6"
+    title: "Application Security — customer data protection (5d)"
+    description: "Application security standards must include protection of data aligned with the agreed classification scheme, 'including privacy of customer data and avoiding unauthorized access and (un)intended data leakage' (5d). Customer PII/PCI in AI-bound flows violates this."
+    mappedCategories: [PII, PCI]
+    severity: high
+    review: "# REVIEW: verified from official v1.0 PDF text (via mirrors) — product owner to confirm"
+  - controlId: "3.3.3"
+    title: "Asset Management — classification, labeling, discovery"
+    description: "A unified, current asset register with information-asset classification, labeling and handling; discovery of new/unregistered assets. Anchors shadow-AI/unregistered-SaaS discovery and classification-aware handling."
+    mappedCategories: [PII, PCI, SECRET, CODE]
+    severity: medium
+    review: "# REVIEW: verified from official v1.0 PDF text (via mirrors) — product owner to confirm"
+  - controlId: "3.3.5"
+    title: "Identity and Access Management — need-to-know"
+    description: "Access restricted on need-to-have/need-to-know; privileged access management with periodic review; considerations cite avoiding unauthorized access and (un)intended data leakage. Credentials/secrets surfaced to AI tools breach this."
+    mappedCategories: [SECRET]
+    severity: high
+    review: "# REVIEW: verified from official v1.0 PDF text (via mirrors) — product owner to confirm"
+  - controlId: "3.3.9"
+    title: "Cryptography"
+    description: "Approved cryptographic standard governing when encryption applies plus key-management lifecycle — relevant to protecting payment data and credentials in transit to third-party services."
+    mappedCategories: [PCI, SECRET]
+    severity: medium
+    review: "# REVIEW: verified from official v1.0 PDF text (via mirrors) — product owner to confirm"
+  - controlId: "3.3.10"
+    title: "Bring Your Own Device (BYOD)"
+    description: "BYOD requires containerization isolating business/sensitive information, MDM, and staff agreements — the nearest CSF hook for shadow-AI use on personal/unmanaged devices."
+    mappedCategories: [PII, CODE]
+    severity: medium
+    review: "# REVIEW: verified from official v1.0 PDF text (via mirrors) — product owner to confirm"
+  - controlId: "3.3.14"
+    title: "Cyber Security Event Management — 24x7 SOC/SIEM"
+    description: "Security event management with 24x7 SOC and centralized SIEM log analysis — anomalous AI-service usage and sensitive-data egress belong in monitored scope."
+    mappedCategories: [PII, PCI, SECRET]
+    severity: medium
+    review: "# REVIEW: numbering confirmed on official Rulebook page 3.3.14 — product owner to confirm"
+  - controlId: "3.3.15"
+    title: "Cyber Security Incident Management"
+    description: "Formal incident identification/response/recovery aligned with enterprise incident management and SAMA notification duties — governs response when a data-leakage-to-AI event is detected."
+    mappedCategories: [PII, PCI]
+    severity: medium
+    review: "# REVIEW: verified from official v1.0 PDF text (via mirrors) — product owner to confirm"
+  - controlId: "3.4.1"
+    title: "Contract and Vendor Management"
+    description: "Cybersecurity involvement in vendor due diligence, baseline security requirements and audit rights in all contracts — applies to contracting any AI/SaaS provider touching member data."
     mappedCategories: [PII, PCI, SECRET]
     severity: high
-    review: "# REVIEW: verify control ID — product owner to supply authoritative SAMA CSF clause"
+    review: "# REVIEW: verified from official v1.0 PDF text (via mirrors) — product owner to confirm"
+  - controlId: "3.4.3"
+    title: "Cloud Computing — approval, residency, segregation"
+    description: "Risk assessment and due diligence before hybrid/public cloud adoption; data located in Saudi Arabia (locations abroad need explicit SAMA approval) and logically segregated. Unapproved foreign-hosted AI services violate residency and approval requirements."
+    mappedCategories: [PII, PCI, SECRET, CODE]
+    severity: high
+    review: "# REVIEW: verified from official v1.0 PDF text (via mirrors; Rulebook 3.4 confirmed) — product owner to confirm"
+  - controlId: "3.1.6"
+    title: "Cyber Security Awareness"
+    description: "Targeted awareness program for staff, third parties and customers — the training control against pasting sensitive data into unapproved AI tools."
+    mappedCategories: [OTHER]
+    severity: low
+    review: "# REVIEW: verified from official v1.0 PDF text (via mirrors) — product owner to confirm"

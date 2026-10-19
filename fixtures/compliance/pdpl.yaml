@@ -1,11 +1,70 @@
 framework: PDPL
-displayName: "Saudi Personal Data Protection Law (PDPL)"
-# Brief R5: PDPL article numbers are NOT populated from memory. The product owner must supply
-# authoritative controlId values. Do not guess them.
+displayName: "Saudi Personal Data Protection Law (PDPL, M/19 as amended by M/148)"
+# Populated 2026-08-10. Law: Royal Decree M/19 (16 Sep 2021), amended by M/148 (27 Mar 2023);
+# in force 14 Sep 2023, FULL enforcement since 14 Sep 2024 (48 SDAIA enforcement decisions
+# by Jan 2026). Implementing Regulation (IR) + Transfer Regulation issued Sep 2023 (Transfer
+# Regulation amended 2024).
+# Verification caveat: official SDAIA PDF endpoints reject automated fetches; article text
+# verified against a verbatim reproduction of the SDAIA official English translation
+# (ksapdpl.com) cross-checked with DLA Piper, Clyde & Co, King & Spalding, Multilaw — no
+# contradictions found. IR Art 24 (72h) is secondary-source-verified. Product owner should
+# spot-check article numbers against the SDAIA PDF before removing review markers.
+# PDPL Art 1 defines "Disclosure" as enabling any person other than controller/processor to
+# access, collect or use personal data BY ANY MEANS — submission to an external AI service
+# is a Disclosure. Sensitive Data (Art 1) includes health, biometric, genetic, credit/
+# financial, location, criminal-record and belief data.
 controls:
-  - controlId: "TODO-VERIFY"
-    title: "Protection of personal data (placeholder)"
-    description: "Map to the relevant PDPL article for unauthorized disclosure of personal data."
+  - controlId: "Article 35"
+    title: "Criminal penalty — disclosure of Sensitive Data"
+    description: "Disclosing or publishing Sensitive Data (incl. health, credit/financial, biometric data) in violation of the Law, with intent to harm or for personal benefit: imprisonment up to 2 years and/or fine up to SAR 3,000,000. The PDPL's sole remaining imprisonment offense (narrowed by M/148)."
+    mappedCategories: [PHI]
+    severity: critical
+    review: "# REVIEW: verified via SDAIA-translation reproduction + DLA Piper — product owner to confirm"
+  - controlId: "Article 29"
+    title: "Cross-border transfer and disclosure restrictions"
+    description: "Transfer/disclosure outside the Kingdom only for defined purposes, with protection abroad not less than PDPL level (per SDAIA adequacy assessment) and minimum-necessary data; safeguards (SCCs/BCRs/certification) plus Transfer-Regulation risk assessment otherwise. Pasting personal data into a foreign-hosted AI service is a cross-border transfer that typically fails these conditions. Rewritten by M/148."
+    mappedCategories: [PII, PHI]
+    severity: critical
+    review: "# REVIEW: verified via SDAIA-translation reproduction; Transfer Regulation detail secondary (Securiti/K&S) — product owner to confirm"
+  - controlId: "Article 15"
+    title: "Permitted disclosure grounds"
+    description: "Personal data may be disclosed only with consent or under narrow grounds (public source, public entity, health/safety, anonymized, legitimate interest excluding Sensitive Data). Unauthorized submission of personal data to an external AI provider is a Disclosure outside these grounds."
+    mappedCategories: [PII]
+    severity: high
+    review: "# REVIEW: verified via SDAIA-translation reproduction — product owner to confirm"
+  - controlId: "Article 19"
+    title: "Security safeguards obligation"
+    description: "Controller must implement all necessary organizational, administrative and technical measures to protect personal data, including during transfer. Legal hook for DLP/AI-egress controls; 'missing technical and organizational safeguards' was a top violation category in SDAIA's first enforcement wave."
+    mappedCategories: [PII, PHI, PCI]
+    severity: high
+    review: "# REVIEW: verified via SDAIA-translation reproduction — product owner to confirm"
+  - controlId: "Article 20"
+    title: "Personal data breach notification (IR Art 24: 72 hours)"
+    description: "Controller must notify SDAIA upon becoming aware of any breach, damage or illegal access (Implementing Regulation Art 24: within 72 hours), and affected data subjects where rights may be prejudiced. Leakage of personal data into an unauthorized AI service can be a notifiable incident."
     mappedCategories: [PII, PHI]
     severity: high
-    review: "# REVIEW: verify control ID — product owner to supply authoritative PDPL article"
+    review: "# REVIEW: Art 20 verified via SDAIA-translation reproduction; 72h from IR Art 24 is secondary-source-verified (Multilaw/Clyde & Co/DLA Piper) — product owner to confirm"
+  - controlId: "Article 23"
+    title: "Health data — minimum access and processing"
+    description: "Access to health data restricted to the minimum number of employees and minimum extent necessary for health services/insurance. Staff feeding patient data to external AI tools directly violates this least-access mandate."
+    mappedCategories: [PHI]
+    severity: high
+    review: "# REVIEW: verified via SDAIA-translation reproduction — product owner to confirm"
+  - controlId: "Article 11"
+    title: "Purpose limitation and data minimization"
+    description: "Collection limited to the minimum necessary for a purpose directly related to the controller's purposes; data no longer needed must be destroyed. Bulk-pasting datasets into AI tools breaches minimization even when a legal basis exists."
+    mappedCategories: [PII]
+    severity: medium
+    review: "# REVIEW: verified via SDAIA-translation reproduction — product owner to confirm"
+  - controlId: "Article 5"
+    title: "Consent as default legal basis"
+    description: "No processing or change of processing purpose without data-subject consent absent an Art 6 exception (legitimate interest never covers Sensitive Data). Re-purposing customer data as AI-tool input is new processing requiring a legal basis."
+    mappedCategories: [PII]
+    severity: medium
+    review: "# REVIEW: verified via SDAIA-translation reproduction — product owner to confirm"
+  - controlId: "Article 36"
+    title: "Administrative penalties"
+    description: "Violations other than Art 35 draw a warning or fine up to SAR 5,000,000, doubled for repeat violations — the penalty vehicle for safeguard, notification, disclosure and transfer failures detected by the platform."
+    mappedCategories: [PII, PHI, PCI]
+    severity: medium
+    review: "# REVIEW: verified via SDAIA-translation reproduction — product owner to confirm"

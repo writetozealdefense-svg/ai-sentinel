@@ -1,0 +1,11 @@
+customer_id,full_name,national_id,id_type,email,mobile,iban,city,date_of_birth,notes
+2001,Fatima Al-Zahrani,1023456789,citizen,fatima.alzahrani@example.com,+966501234567,SA4420000001234567891234,Riyadh,1987-04-12,Private banking
+2002,Mohammed Al-Qahtani,1087654321,citizen,mohammed.alqahtani@example.com,+966552345678,SA0380000000608010167519,Jeddah,1979-11-03,VIP customer
+2003,Noura Al-Otaibi,1045678912,citizen,noura.alotaibi@example.com,+966543456789,SA5605000068201234567890,Riyadh,1993-06-27,Premium tier
+2004,Rajesh Kumar,2098765432,iqama,rajesh.kumar@example.net,+966564567890,SA1145000000123456789012,Dammam,1985-02-18,Expat account
+2005,Abdullah Al-Harbi,1056789123,citizen,abdullah.alharbi@example.com,+966505678901,SA2910000001234567890123,Makkah,1972-09-30,Legacy account
+2006,Maria Santos,2076543219,iqama,maria.santos@example.org,+966576789012,SA7130400001234567890123,Al Khobar,1990-12-08,New account
+2007,Sara Al-Ghamdi,1034567891,citizen,sara.alghamdi@example.com,+966537890123,SA8480000001234567890123,Jeddah,1996-03-21,Churn risk
+2008,Khalid Al-Mutairi,1067891234,citizen,khalid.almutairi@example.com,+966558901234,SA6520000001234567890123,Riyadh,1983-07-15,Enterprise
+2009,Ahmed Hassan,2054321987,iqama,ahmed.hassan@example.com,+966549012345,SA3305000068212345678901,Madinah,1988-05-02,Referral
+2010,Layla Al-Shehri,1078912345,citizen,layla.alshehri@example.com,+966500123456,SA9260100001234567890123,Abha,1994-10-26,High value

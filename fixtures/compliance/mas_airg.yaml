@@ -1,0 +1,55 @@
+framework: MAS_AIRG
+displayName: "MAS Proposed Guidelines on AI Risk Management (consultation Nov 2025 — NOT FINAL)"
+# Populated 2026-09-29. "Consultation Paper on Proposed Guidelines on Artificial Intelligence
+# Risk Management (for Financial Institutions)", Monetary Authority of Singapore, issued mid-Nov
+# 2025 (13 Nov per Bird & Bird / Waystone / Baker McKenzie; 15 Nov per Rajah & Tann — mas.gov.sg
+# unreachable, exact date unconfirmed); responses closed 31 Jan 2026.
+# STATUS AS OF 2026-09-29: NOT CONFIRMED FINALISED. MAS (24 Mar 2026 release, via Hubbis) was
+# "presently reviewing responses"; HLC (3 Jun 2026): "final Guidelines remain pending"; Covarage
+# (7 May 2026) expected "mid-2026"; no MAS release or law-firm note announcing final issuance was
+# found. Treat as DRAFT supervisory expectations. Proposed transition: "12 months after the
+# Guidelines are issued". When issued they will be MAS Guidelines (non-binding supervisory
+# expectation, like the TRM Guidelines), applying to all FIs proportionately to "size and nature
+# of their activities". AI definition is broad — models, systems and use cases, "including
+# generative AI, as well as newer developments such as AI agents"; even "assistive tools"
+# (copilots) need baseline governance (Waystone).
+# Verification caveat: the MAS consultation paper itself was NOT opened (403). Wording comes from
+# Bird & Bird, Waystone, Baker McKenzie, Stephenson Harwood, Pertama, HLC and the ASIFMA response
+# of 31 Jan 2026. Paragraph numbers are NOT reliably known — ASIFMA cites paras 4.11 and 4.24 and
+# footnotes 10/21, but these were not verified against the paper — so controlIds are PROPOSED-*
+# placeholders, NOT clause numbers. Replace them with final paragraph numbers once issued.
+# Companion voluntary industry outputs are NOT mapped: MindForge AI Risk Management Toolkit
+# (Mar 2026, 24 FIs; MAS-hosted PDF returned 403), ABS Handbook on Generative AI Guardrails in
+# Banking (24 Mar 2026), MAS SAFR white paper v1.0 (3 Jul 2026 — "does not constitute regulatory
+# guidance or supervisory expectations").
+controls:
+  - controlId: "PROPOSED-Identification"
+    title: "Consistent identification of AI usage across the organisation"
+    description: "\"Systems, policies and procedures should be established to ensure consistent identification of AI usage across all relevant business and functional areas\". ASIFMA's consultation response asked MAS to clarify \"whether automated discovery or manual attestation (or combination) is expected\" and whether \"background use of AI (e.g. copilots)\" triggers requirements — the discovery-method question is live. Automated discovery output is the candidate population for this identification process."
+    mappedCategories: [OTHER]
+    severity: medium
+    review: "# REVIEW: guidelines are PROPOSED (consultation Nov 2025), with a 12-month transition once issued; wording from Baker McKenzie / Bird & Bird / ASIFMA summaries, MAS paper not opened, paragraph number unknown — must be re-checked against the final Guidelines — product owner to confirm"
+  - controlId: "PROPOSED-Inventory"
+    title: "Accurate, up-to-date inventory of AI use cases, systems and models"
+    description: "\"an accurate and up-to-date inventory of AI use cases, systems or models\" with \"key attributes\", \"regularly reviewed\" (Baker McKenzie). Waystone: baseline controls include \"rules on allowed/disallowed use, ownership, internal checks\". AI systems discovered in code, cloud or egress that are absent from the inventory map here."
+    mappedCategories: [OTHER]
+    severity: medium
+    review: "# REVIEW: guidelines are PROPOSED (consultation Nov 2025), with a 12-month transition once issued; wording from Baker McKenzie and Waystone summaries, MAS paper not opened, paragraph number unknown — must be re-checked against the final Guidelines — product owner to confirm"
+  - controlId: "PROPOSED-ThirdPartyAI"
+    title: "Onboarding, development and deployment controls for third-party AI"
+    description: "\"onboarding, development and deployment controls for third-party AI are adequate for the risk materiality\"; ASIFMA cites para 4.11 and footnotes 10/21 as covering procured AI, supplier-used AI and services where AI is \"later introduced\". Third-party AI services discovered in use with no onboarding record map here."
+    mappedCategories: [OTHER, CODE]
+    severity: medium
+    review: "# REVIEW: guidelines are PROPOSED (consultation Nov 2025), with a 12-month transition once issued; wording from law-firm summaries and the ASIFMA response (para 4.11 / fn 10, 21 cited by ASIFMA, unverified), MAS paper not opened — must be re-checked against the final Guidelines — product owner to confirm"
+  - controlId: "PROPOSED-Monitoring"
+    title: "Ongoing monitoring, cybersecurity controls and auditability of deployed AI"
+    description: "Lifecycle controls (Section 4 of the proposal): \"robust controls for the ongoing monitoring of all deployed AI\"; AI must be \"secure, well governed and supported by appropriate controls\" and \"documented to enable reproducibility and auditability\"; \"independent reviews prior to deployment\" and \"technology and cybersecurity reviews\"; change management and decommissioning. ASIFMA also references a \"kill switches\" expectation in the cybersecurity section — wording unconfirmed. Deployed AI seen in telemetry without monitoring coverage maps here."
+    mappedCategories: [OTHER, PII, PHI, PCI]
+    severity: medium
+    review: "# REVIEW: guidelines are PROPOSED (consultation Nov 2025), with a 12-month transition once issued; wording from Baker McKenzie / Stephenson Harwood / ASIFMA summaries, MAS paper not opened, paragraph numbers unknown, kill-switch wording unconfirmed — must be re-checked against the final Guidelines — product owner to confirm"
+  - controlId: "PROPOSED-Materiality"
+    title: "Materiality assessment — impact, complexity and reliance"
+    description: "Risk materiality is assessed on at least \"impact, complexity and reliance\", distinguishing inherent from residual risk (Section 3 per ASIFMA). Discovered AI usage should be triaged by materiality so that identification feeds proportionate controls."
+    mappedCategories: [OTHER]
+    severity: low
+    review: "# REVIEW: guidelines are PROPOSED (consultation Nov 2025), with a 12-month transition once issued; wording from ASIFMA and law-firm summaries, MAS paper not opened, section reference unverified — must be re-checked against the final Guidelines — product owner to confirm"

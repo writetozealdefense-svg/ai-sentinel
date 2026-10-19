@@ -1,0 +1,9 @@
+customer_id,full_name,nric_fin,email,mobile,account_number,bank,date_of_birth,notes
+3001,Wei Lin Tan,S7812345X,weilin.tan@example.com,+65 91234567,641-88324-001,DBS,1978-04-12,Private banking
+3002,Siti Nurhaliza,S8623456B,siti.nurhaliza@example.com,+65 82345678,652-11209-114,OCBC,1986-09-23,Premier
+3003,Rajesh Kumar,S9034567C,rajesh.kumar@example.com,+65 93456789,673-55671-220,UOB,1990-01-15,Wealth
+3004,Mei Ling Chua,T0145678D,meiling.chua@example.com,+65 84567890,644-90233-330,DBS,2001-06-30,New account
+3005,Ahmad Faizal,S7556789E,ahmad.faizal@example.com,+65 95678901,681-23398-441,Maybank SG,1975-12-08,Net-30
+3006,Grace Wong,S8867890F,grace.wong@example.com,+65 86789012,659-44510-552,OCBC,1988-03-19,Churn risk
+3007,Daniel Lim,S9278901G,daniel.lim@example.com,+65 97890123,677-81226-663,UOB,1992-07-04,High value
+3008,Priya Nair,F6689012H,priya.nair@example.com,+65 88901234,648-37754-774,Standard Chartered SG,1966-11-27,EP holder

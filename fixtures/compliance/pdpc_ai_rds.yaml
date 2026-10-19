@@ -1,0 +1,38 @@
+framework: PDPC_AI_RDS
+displayName: "PDPC Advisory Guidelines on Use of Personal Data in AI Recommendation and Decision Systems (Mar 2024)"
+# Populated 2026-09-29. Issued by the PDPC on 1 Mar 2024. ADVISORY, NON-BINDING: the guidelines
+# are "advisory in nature, are not legally binding on the Commission or on any other party"
+# (para 2.2). Scope: AI recommendation and decision systems — explicitly NOT generative AI (see
+# pdpc_genai.yaml for the Jul 2026 GenAI guidelines). Three stages: development/testing/
+# monitoring; deployment; procurement. The Business Improvement Exception (para 5.1(a):
+# "improving, enhancing existing goods and services or developing new goods or services") and
+# the Research Exception (para 6.2(b)) are consent exceptions, not security controls, and are not
+# mapped here.
+# Verification: the official PDPC PDF (pdpc.gov.sg advisory-guidelines PDF, URL in SOURCES-SG.md)
+# and the PDPC guidelines page were opened; cross-checked against Bird & Bird, Rajah & Tann and
+# Drew Network Asia summaries. Paragraph numbers are as read in that PDF.
+controls:
+  - controlId: "para 11.2"
+    title: "Third-party developers — data mapping and labelling, provenance record"
+    description: "Third-party developers acting as data intermediaries (Section 11) are bound by the \"Protection Obligation and Retention obligation\" (11.2, fn 21); the guidelines recommend \"data mapping and labelling\" and a \"provenance record\" (11.2) so that implementing organisations can demonstrate compliance. Datasets and models discovered in AI pipelines with no provenance record map here."
+    mappedCategories: [PII, PHI, OTHER]
+    severity: medium
+    review: "# REVIEW: verified from the official PDPC advisory-guidelines PDF, cross-checked with Bird & Bird and Rajah & Tann; advisory and non-binding — product owner to confirm"
+  - controlId: "para 7.2"
+    title: "Technical, process and/or legal controls for data protection"
+    description: "During development, testing and monitoring, \"appropriate technical, process and/or legal controls for data protection should be included\" (7.2); anonymised data should leave \"no serious possibility of reidentification\" (7.10). Personal data flowing into an AI system with none of these controls evidenced maps here."
+    mappedCategories: [PII, PHI]
+    severity: medium
+    review: "# REVIEW: verified from the official PDPC advisory-guidelines PDF; advisory and non-binding — product owner to confirm"
+  - controlId: "para 7.1"
+    title: "Data minimisation for training and improvement"
+    description: "\"Using only personal data containing attributes required to train and improve the AI System\" (7.1). Personal-data attributes observed in training inputs or prompts beyond what the system requires map here."
+    mappedCategories: [PII, PHI]
+    severity: low
+    review: "# REVIEW: verified from the official PDPC advisory-guidelines PDF; advisory and non-binding — product owner to confirm"
+  - controlId: "para 10.2"
+    title: "Accountability — written policies, pre-emptively published"
+    description: "Organisations should maintain written policies on their use of personal data in AI recommendation and decision systems (10.2), pre-emptively published; notification of AI use is addressed at 9.4. AI systems discovered with no written policy coverage map here."
+    mappedCategories: [PII, PHI, OTHER]
+    severity: low
+    review: "# REVIEW: verified from the official PDPC advisory-guidelines PDF (paragraph number and substance; wording paraphrased, not quoted); advisory and non-binding — product owner to confirm"

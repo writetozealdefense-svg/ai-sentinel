@@ -1,0 +1,23 @@
+[intro]
+AI Sentinel. Discover, govern, and secure every AI interaction. This is a live walkthrough of how the platform turns shadow AI usage into evidence a Gulf regulator will accept.
+
+[executive]
+Your employees are already using ChatGPT, DeepSeek, Claude and Gemini with corporate data. The Executive dashboard discovers this shadow AI automatically: every unsanctioned tool flagged, every interaction inspected and risk scored. Detection here is real — Microsoft Presidio, YARA rules and custom regex — never scripted.
+
+[soc]
+The SOC view streams every AI-bound prompt as it happens. Moments ago, a simulated Riyadh bank employee pasted customer records — Saudi national IDs, mobiles and IBANs — into a foreign-hosted AI tool. Detection fired on the Saudi identifiers, and the decision was BLOCK: the data never left the Kingdom. Runtime telemetry on this path is honestly labelled as simulated.
+
+[compliance]
+This is where AI Sentinel is different. That one block becomes violations against the exact controls a Saudi auditor would cite. PDPL Article twenty-nine: cross-border transfer restrictions. NCA Essential Cybersecurity Controls two dash seven dash two: classification-based data protection. SAMA CSF three point three point eight: the framework's data-leakage-prevention mandate. And SDAIA's generative AI prohibited-input rules. Every control ID was verified against official sources and carries a visible review gate. No invented clause numbers, ever.
+
+[agents]
+AI security no longer stops at prompts. Autonomous agents touch Jira, GitHub and Salesforce on your behalf. AI Sentinel scores every agent from zero to one hundred. When this agent accessed sensitive data and escalated privileges, its score crossed the threshold — producing exactly one alert, not an alert storm.
+
+[graph]
+For incident response, the risk graph answers the question every data protection officer fears: who exposed sensitive data, to which AI system? The exposure path — user, to prompt, to model, to dataset — resolves in under a second. PDPL's seventy-two hour breach notification clock starts at discovery; scoping the incident now takes seconds, not days.
+
+[copilot]
+And when the board asks what happened, the built-in copilot explains any incident in three languages: executive, technical, and compliance — citing the actual violation record and the actual control. It runs fully offline. Your evidence never leaves your environment.
+
+[outro]
+AI Sentinel. Real detection. Verified GCC control mappings. Honest labelling. Open source — one docker compose up, and it is running in your estate.

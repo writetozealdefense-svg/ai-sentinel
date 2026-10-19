@@ -65,6 +65,34 @@ _RAW_PATTERNS: list[tuple] = [
         r"\b[0-9]{2}-[0-9]{7}\b",
         Category.PII, 0.65, "US_EIN",
     ),
+    # ── GCC identifiers (Phase 6, scenario-7) ────────────────────────────────
+    # Saudi National ID / Iqama: 10 digits, first digit 1 (citizen) or 2 (resident).
+    # Word-bounded to avoid matching inside longer digit runs (IBANs, cards).
+    (
+        "saudi_national_id",
+        r"\b[12][0-9]{9}\b",
+        Category.PII, 0.85, "SAUDI_NATIONAL_ID",
+    ),
+    (
+        "saudi_mobile",
+        # +9665XXXXXXXX (international) or 05XXXXXXXX (local) mobile formats
+        r"\+9665[0-9]{8}\b|\b05[0-9]{8}\b",
+        Category.PII, 0.75, "SAUDI_MOBILE",
+    ),
+    # ── Singapore identifiers (BH Asia / scenario-8) ─────────────────────────
+    # NRIC/FIN: S/T (citizens/PRs by era) or F/G/M (foreigners) + 7 digits + check letter.
+    # Format-level detection (like SAUDI_NATIONAL_ID); checksum not validated.
+    (
+        "sg_nric_fin",
+        r"\b[STFGMstfgm]\d{7}[A-Za-z]\b",
+        Category.PII, 0.85, "SG_NRIC_FIN",
+    ),
+    (
+        "sg_mobile",
+        # +65 8xxxxxxx / 9xxxxxxx (international) or bare 8/9xxxxxxx local mobiles
+        r"\+65[\s-]?[89][0-9]{7}\b",
+        Category.PII, 0.75, "SG_MOBILE",
+    ),
     (
         "ipv6_address",
         r"\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b",

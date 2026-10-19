@@ -1,0 +1,51 @@
+framework: PDPC_GENAI
+displayName: "PDPC Advisory Guidelines on Use of Personal Data in Generative AI (Jul 2026)"
+# Populated 2026-09-29. Proposed by the PDPC on 2 Jun 2026 (consultation closed 1 Jul 2026 —
+# Latham & Watkins says 14 Jul); FINAL issued 20 Jul 2026 per Stephenson Harwood, Digital Policy
+# Alert and Alder (HLC says 31 Jul; IAPP reported the launch on 23 Jul). PDPC now lists it under
+# regulatory guidance. ADVISORY / NON-BINDING, but expected to shape PDPC enforcement of the PDPA
+# obligations (see pdpa_sg.yaml). Three roles: Model Providers (paras 7.1–7.5), System Providers
+# (8.1–8.3), System Deployers (9.1–9.5).
+# Verification caveat: the PDPC final-guidelines page rendered titles only and PDPC PDFs were
+# blocked by robots.txt, so the FINAL text was NOT read. Paragraph numbers and quotes below were
+# read from the PROPOSED (consultation) text (files.app.optical.gov.sg PDF) and cross-checked
+# against the Rajah & Tann, Allen & Gledhill, Stephenson Harwood, HLC and Alder summaries of the
+# final version. Reported final-version changes (web-scraping notification proposal dropped in
+# favour of a DPIA/written record; more digital-barrier examples; no template for AI-Specific
+# Notifications) do not touch the paragraphs cited here, but paragraph numbering may have shifted —
+# product owner must re-check every paragraph number against the final guidelines before
+# removing markers.
+# Gaps: the guidelines do not explicitly treat employee use of consumer AI tools, cross-border
+# transfer to overseas model endpoints or breach notification — the general PDPA obligations
+# apply (pdpa_sg.yaml ss 24, 26, 26D).
+controls:
+  - controlId: "para 9.3"
+    title: "System Deployers safeguard prompts, inputs, outputs and agent/tool activity data"
+    description: "System Deployers must \"safeguard personal data in their possession or under their control. This includes new categories of data sources ... (e.g. end-user prompts, inputs and generated outputs, agent or tool activity data)\" and must \"track and designate responsibilities over new data sources and implement corresponding safeguards\". An AI-egress or shadow-AI event surfaces a prompt, output or tool-activity data source that is untracked, has no designated owner and therefore no corresponding safeguard."
+    mappedCategories: [PII, PHI, OTHER]
+    severity: high
+    review: "# REVIEW: paragraph number and quotes read from the PROPOSED (consultation) text (files.app.optical.gov.sg PDF), cross-checked with Stephenson Harwood and Alder summaries of the final; must be re-checked against the final guidelines issued 20 Jul 2026 (HLC says 31 Jul) — product owner to confirm"
+  - controlId: "para 9.5"
+    title: "Agentic functionalities — regularly review sufficiency of safeguards"
+    description: "Agentic capabilities \"can exacerbate data protection risks, System Deployers should carefully consider the privacy-utility trade-offs\"; deployers should \"regularly review the sufficiency of their safeguards, particularly where their GenAI systems have agentic functionalities\" (the guidelines refer to IMDA's Model AI Governance Framework for Agentic AI — see imda_mgf_agentic.yaml). Agents or tool calls discovered outside the reviewed set are evidence that the safeguard review has gaps."
+    mappedCategories: [OTHER]
+    severity: high
+    review: "# REVIEW: paragraph number and quotes read from the PROPOSED (consultation) text, cross-checked with Rajah & Tann and Allen & Gledhill notes; must be re-checked against the final guidelines issued 20 Jul 2026 (HLC says 31 Jul) — product owner to confirm"
+  - controlId: "para 9.1"
+    title: "System Deployers bear primary responsibility; sufficient information on upstream safeguards"
+    description: "System Deployers \"bear primary responsibility for ensuring that the Generative AI Systems they have chosen to use can meet their obligations under the PDPA\" and must have \"sufficient information on upstream safeguards\" from their providers. A third-party AI provider observed in code or egress with no due-diligence record is a deployer-responsibility gap."
+    mappedCategories: [PII, PHI]
+    severity: medium
+    review: "# REVIEW: paragraph number and quotes read from the PROPOSED (consultation) text; must be re-checked against the final guidelines issued 20 Jul 2026 (HLC says 31 Jul) — product owner to confirm"
+  - controlId: "para 7.4/7.5/8.1"
+    title: "Model and System Providers as data intermediaries — documented data access controls"
+    description: "Model Providers and System Providers acting for deployers are data intermediaries (7.4, 8.1): they must make \"reasonable security arrangements\", document their \"data access controls\" (7.5) and are \"also subject to the Retention Limitation Obligation\" (7.4). Best practice at 8.3: providers share \"system-level safeguards\" (including testing metrics and breach procedures) with deployers. Maps a discovered provider integration to the intermediary documentation the deployer should be able to produce."
+    mappedCategories: [PII, PHI]
+    severity: medium
+    review: "# REVIEW: paragraph numbers and quotes read from the PROPOSED (consultation) text; must be re-checked against the final guidelines issued 20 Jul 2026 (HLC says 31 Jul) — product owner to confirm"
+  - controlId: "para 9.4"
+    title: "Written policies and documented processes for safeguards"
+    description: "System Deployers should \"develop clear written policies and document processes in relation to the safeguards undertaken\". Discovered generative-AI usage with no written policy coverage maps here."
+    mappedCategories: [PII, PHI, OTHER]
+    severity: low
+    review: "# REVIEW: paragraph number and quote read from the PROPOSED (consultation) text; must be re-checked against the final guidelines issued 20 Jul 2026 (HLC says 31 Jul) — product owner to confirm"

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="ZealDefense logo">
+  <!-- ZealDefense brand mark: glowing cyan ring, white shield, stylized Z (vector
+       recreation of the raster brand asset; drop the original PNG in /public to swap). -->
+  <defs>
+    <filter id="zdGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="2.6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- glowing ring -->
+  <circle cx="50" cy="50" r="44" fill="none" stroke="#67e8f9" stroke-width="3.2" filter="url(#zdGlow)"/>
+
+  <!-- shield -->
+  <path d="M50 20 L73 28.5 V52 C73 66.5 63.5 75.5 50 82 C36.5 75.5 27 66.5 27 52 V28.5 Z" fill="#ffffff"/>
+
+  <!-- stylized Z cut into the shield (page-navy) -->
+  <path d="M36 34 L64 34 L64 41 L47.5 57 L64 57 L64 64 L36 64 L36 57 L52.5 41 L36 41 Z" fill="#0b1121"/>
+
+  <!-- bottom swoosh accent -->
+  <path d="M40 70 C46 72.5 54 72.5 60 70 L57 74.5 C52.5 76.3 47.5 76.3 43 74.5 Z" fill="#0b1121"/>
+</svg>

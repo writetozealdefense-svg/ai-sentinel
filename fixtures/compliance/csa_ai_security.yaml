@@ -1,0 +1,59 @@
+framework: CSA_AI_SEC
+displayName: "CSA Guidelines and Companion Guide on Securing AI Systems (Oct 2024)"
+# Populated 2026-09-29. "Guidelines on Securing AI Systems" and the community-driven "Companion
+# Guide on Securing AI Systems", Cyber Security Agency of Singapore (CSA), published 15 Oct 2024;
+# final, to "be maintained as living resources" (CSA page metadata last updated 28 Sep 2026, but
+# no revised edition identified — the re-uploaded Guidelines file carries the same Oct 2024
+# content). VOLUNTARY: "While these guidelines are not mandatory, we strongly encourage system
+# owners to consider these key principles"; the Companion Guide is "not mandatory, prescriptive
+# nor exhaustive". Audience: "system owners" adopting AI (decision-makers, AI practitioners,
+# cybersecurity practitioners). Five lifecycle stages (Guidelines §3.1): Planning and Design
+# (1.x), Development (2.x), Deployment (3.x), Operations and Maintenance (4.x), End of Life (5.1).
+# Verification: both official CSA PDFs were fetched from isomer-user-content.by.gov.sg (URLs in
+# SOURCES-SG.md) and the CSA publication page was opened. controlIds prefixed "Guidelines §" are
+# Guidelines principles; "Companion Guide n.n.n" ids are Companion Guide sub-sections.
+# Agent-autonomy content is NOT in these documents — see csa_agentic_ai.yaml (2026 Addendum).
+# Neither document covers cross-border transfer or breach notification — see pdpa_sg.yaml.
+controls:
+  - controlId: "Guidelines §2.3"
+    title: "Identify, track and protect AI-related assets"
+    description: "\"Understand the value of AI-related assets, including models, data, prompts, logs and assessments\" and \"Have processes to track, authenticate, version control, and secure assets.\" Companion Guide 2.3.1 adds \"documenting the data, codes, test cases and model\" (\"Model cards, Data cards, and Software Bill of Materials (SBOMs) may be used\"). A model, prompt template or embedded provider API key discovered in code or egress that is absent from the asset register maps here."
+    mappedCategories: [SECRET, CODE, OTHER]
+    severity: high
+    review: "# REVIEW: verified from the official CSA Guidelines PDF (guidelines-on-securing-ai-systems_2024-10-15.pdf) and Companion Guide PDF; voluntary guidance — product owner to confirm"
+  - controlId: "Guidelines §2.1"
+    title: "Secure the supply chain"
+    description: "\"Assess and monitor potential security risks of the AI system's supply chain across its life cycle.\" Companion Guide 2.1.2: \"Ensure data, models, compilers, software libraries, developer tools and applications from trusted sources.\"; 2.1.4 weighs the trade-offs of \"an untrusted 3rd party model\". Unvetted model pulls, AI libraries, MCP packages or hosted-API vendors observed in repositories or egress map here."
+    mappedCategories: [CODE, OTHER]
+    severity: high
+    review: "# REVIEW: verified from the official CSA Guidelines PDF and Companion Guide PDF; voluntary guidance — product owner to confirm"
+  - controlId: "Guidelines §4.1"
+    title: "Monitor and log AI system inputs"
+    description: "\"monitor and log inputs to the AI system, such as queries, prompts and requests\"; \"Proper logging allows for compliance, audit, investigation and remediation.\" Companion Guide 4.1.1: \"Validate/Monitor inputs to the model and system for possible attacks and suspicious activity.\" Sensitive data sent to a model whose invocation or diagnostic logging is disabled maps here."
+    mappedCategories: [PII, PHI, PCI]
+    severity: high
+    review: "# REVIEW: verified from the official CSA Guidelines PDF and Companion Guide PDF; voluntary guidance — product owner to confirm"
+  - controlId: "Guidelines §2.4"
+    title: "Secure the AI development environment — least privilege and access logging"
+    description: "\"appropriate access controls and logging/monitoring, segregation of environments, and secure-by-default configurations\". Companion Guide 2.4.1: \"role-based access controls to the development environment, based on the principles of least privilege\"; \"Access should be promptly revoked for terminated users\"; 2.4.2: \"Log access with timestamps. Track changes to the data and model or configuration changes.\" Over-broad or stale principals holding model-invocation rights map here."
+    mappedCategories: [SECRET, CODE, OTHER]
+    severity: medium
+    review: "# REVIEW: verified from the official CSA Guidelines PDF and Companion Guide PDF; voluntary guidance — product owner to confirm"
+  - controlId: "Companion Guide 3.1.3"
+    title: "Keep a record of model access, inputs and output behaviour"
+    description: "\"Keep a record of access to the model, inputs to the model, and output behaviour.\" IAM principals with model-invoke rights, and deployed model resources for which no access record exists, map here."
+    mappedCategories: [PII, PHI, PCI, OTHER]
+    severity: medium
+    review: "# REVIEW: verified from the official CSA Companion Guide PDF (community-driven, voluntary) — product owner to confirm"
+  - controlId: "Companion Guide 2.3.4"
+    title: "Output filters against sensitive-information leakage"
+    description: "\"filters at the output to prevent sensitive information from being leaked.\" Related: 2.2.1 \"secure non-public sensitive data, such as anonymisation and privacy-enhancing technologies\"; 2.3.2 encryption at rest and in transit for model weights and code. Sensitive data observed in model outputs with no output filter in place maps here."
+    mappedCategories: [PII, PHI]
+    severity: medium
+    review: "# REVIEW: verified from the official CSA Companion Guide PDF (community-driven, voluntary) — product owner to confirm"
+  - controlId: "Companion Guide 2.1.6"
+    title: "Scan models and serialised weight files"
+    description: "\"Scan models or serialised weight files\" before use (Picklescan and Modelscan are named). Serialised model files found in repositories or registries with no scan result map here."
+    mappedCategories: [CODE]
+    severity: medium
+    review: "# REVIEW: verified from the official CSA Companion Guide PDF (community-driven, voluntary) — product owner to confirm"
