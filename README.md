@@ -18,6 +18,7 @@ evidence in [`VERIFICATION.md`](VERIFICATION.md). Nothing is "done" without past
 - **R3** — Copilot defaults to deterministic **offline** mode; live LLM gated behind `COPILOT_LIVE=true`.
 - **R4** — All telemetry is synthetic and labelled `SIMULATED` in code, data, and UI.
 - **R5** — Compliance control IDs come only from `fixtures/compliance/*.yaml`; regional frameworks (NCA ECC / SAMA CSF / PDPL / DPDPA) are placeholders awaiting product-owner verification.
+- **R5 (Singapore)** — Singapore control IDs likewise come only from `fixtures/compliance/*.yaml`, across nine source-cited packs (PDPA / MAS TRM / MAS AIRG / PDPC GenAI / PDPC AI-RDS / CSA Securing AI / CSA Agentic AI / CSA Cyber Essentials / IMDA Agentic MGF). Every control carries a review marker until the product owner verifies it against its cited source (audit trail: [`SOURCES-SG.md`](fixtures/compliance/SOURCES-SG.md)); MAS AIRG IDs stay `PROPOSED-*` placeholders until mapped to the final Guidelines issued 7 Oct 2026.
 
 ## Repo layout
 ```
