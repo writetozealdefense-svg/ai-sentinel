@@ -1,0 +1,60 @@
+framework: SDAIA_AI
+displayName: "SDAIA AI Ethics Principles & Generative AI Guidelines (Saudi Arabia)"
+# Populated 2026-08-10. Instruments covered:
+#   1. SDAIA "AI Ethics Principles" (Sept 2023 edition, commonly cited as v2.0; cover says
+#      "Version 1.0 - September 2023"). Verified from the primary PDF on dgp.sdaia.gov.sa.
+#      Mandatory for limited- and high-risk AI systems; unacceptable-risk AI prohibited.
+#      Official lifecycle control codes exist (PD.n / PID.n / BV.n / DM.n) but per-phase
+#      counts were not re-verified — principle-level IDs used here instead.
+#   2. SDAIA Generative AI Guidelines (Jan 2024; government + public editions; "2025"
+#      refreshed editions indexed on sdaia.gov.sa). Gov edition treated as binding for
+#      government entities; public edition advisory. Text via secondary sources (CMS,
+#      HSF Kramer, Securiti, Adeptiv) — sdaia.gov.sa blocks automated fetches.
+# ID convention: "AIEP-Pn" (principle n) and "GAIG-*" are CONSTRUCTED identifiers (document
+# section references, not official control numbers) — flagged in each review marker.
+# NOT shipped (draft/monitor): NCA AICG-1:2026 AI Cybersecurity Guidelines (draft),
+# SDAIA Responsible AI Policy (consultation closed May 2026, not enacted),
+# National AI Risk Management Framework (final Apr 2026 — add after primary-text review).
+controls:
+  - controlId: "GAIG-GOV-ProhibInput"
+    title: "GenAI Guidelines (Gov): prohibited inputs"
+    description: "Government entities must prevent restricted/classified information and protected personal data from being entered into generative AI systems; internal usage policies must enforce this. The public edition mirrors this for organizations generally."
+    mappedCategories: [PII, PHI, PCI, SECRET, CODE]
+    severity: critical
+    review: "# REVIEW: CONSTRUCTED ID (doc section ref); requirement from CMS/HSF Kramer/Securiti summaries — verify wording against official PDF"
+  - controlId: "AIEP-P2"
+    title: "AI Ethics Principle 2: Privacy & Security"
+    description: "AI systems must protect personal data via privacy-by-design/security-by-design, with data-protection mechanisms and impact assessments aligned to the PDPL, across the AI lifecycle."
+    mappedCategories: [PII, PHI, PCI]
+    severity: high
+    review: "# REVIEW: principle verified from primary SDAIA PDF; 'AIEP-P2' is a CONSTRUCTED ID (doc numbers principles 1-7) — product owner to confirm"
+  - controlId: "GAIG-GOV-DataClass"
+    title: "GenAI Guidelines (Gov): data classification compliance"
+    description: "GenAI use must comply with national data-classification rules; classification level determines what may lawfully reach a GenAI tool."
+    mappedCategories: [SECRET, CODE, PII]
+    severity: high
+    review: "# REVIEW: CONSTRUCTED ID; requirement from CMS/HSF Kramer summaries — verify against official PDF"
+  - controlId: "GAIG-GOV-HumanReview"
+    title: "GenAI Guidelines: human verification of outputs"
+    description: "GenAI outputs must be human-reviewed/verified before official use (hallucination and misinformation mitigation); public edition requires periodic output validation under Reliability & Safety."
+    mappedCategories: [OTHER]
+    severity: medium
+    review: "# REVIEW: CONSTRUCTED ID; requirement from CMS/HSF Kramer/Securiti summaries — verify against official PDF"
+  - controlId: "AIEP-P6"
+    title: "AI Ethics Principle 6: Transparency & Explainability"
+    description: "AI use and AI-generated decisions/content must be disclosed and explainable to affected parties; GenAI public guidelines add labelling/watermarking of synthetic content."
+    mappedCategories: [OTHER]
+    severity: medium
+    review: "# REVIEW: principle verified from primary SDAIA PDF; CONSTRUCTED ID — product owner to confirm"
+  - controlId: "AIEP-P5"
+    title: "AI Ethics Principle 5: Reliability & Safety"
+    description: "AI systems must perform as intended, be robust and stable, with defined safety criteria and human-intervention triggers — the hook for agent-security guardrails and kill-switch requirements."
+    mappedCategories: [OTHER]
+    severity: medium
+    review: "# REVIEW: principle verified from primary SDAIA PDF; CONSTRUCTED ID — product owner to confirm"
+  - controlId: "AIEP-P7"
+    title: "AI Ethics Principle 7: Accountability & Responsibility"
+    description: "Clear allocation of responsibility across AI designers/developers/deployers with governance structures (incl. Responsible AI Officer and AI System Assessor roles added in the Sept 2023 edition) and legal compliance."
+    mappedCategories: [OTHER]
+    severity: medium
+    review: "# REVIEW: principle + RAIO/Assessor roles verified from primary SDAIA PDF; CONSTRUCTED ID — product owner to confirm"

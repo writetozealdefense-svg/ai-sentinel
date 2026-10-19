@@ -1,0 +1,61 @@
+framework: PDPA_SG
+displayName: "Singapore Personal Data Protection Act 2012 (PDPA, as amended 2020)"
+# Populated 2026-09-29. Statute: Personal Data Protection Act 2012 as amended by the Personal
+# Data Protection (Amendment) Act 2020 — mandatory data-breach notification (Part 6A, ss 26A–26E)
+# in force 1 Feb 2021; increased financial-penalty cap (s 48J) in force 1 Oct 2022. BINDING
+# statute enforced by the Personal Data Protection Commission (PDPC). Applies to all organisations
+# (private sector) collecting, using or disclosing personal data in Singapore, including overseas
+# organisations; data intermediaries bear the Protection, Retention Limitation and
+# breach-notification-to-controller duties. Companion instruments: Personal Data Protection
+# Regulations 2021 (Part 3 — transfer conditions) and the Personal Data Protection (Notification
+# of Data Breaches) Regulations 2021.
+# Verification caveat: sso.agc.gov.sg (Singapore Statutes Online) returned 403 at the egress
+# proxy, so NO section was read from the official statute text. Section numbers and wording were
+# verified via the law-firm sources listed in SOURCES-SG.md: DLA Piper Data Protection Laws of
+# the World (Singapore law + transfer pages), Drew & Napier Lexology GTDT Data Protection &
+# Privacy 2024, Baker McKenzie Global Data & Cyber Handbook (Singapore), Chambers Data Protection
+# & Privacy 2026 comparison, Allen & Gledhill (s 48J note), OECD.AI (s 26 entry) and Covarage
+# (3-day guide). No contradictions on the section numbers used below, except the placement of the
+# data-intermediary notification duty within Part 6A (see the s 26D marker). Regulation numbers
+# within the PDP Regulations 2021 (reported as regs 10–12) are UNCONFIRMED and deliberately not
+# cited as controlIds. Product owner must spot-check every section number against SSO from a
+# network that can reach it before removing review markers.
+# The PDPC AI guidance sits in separate packs: pdpc_genai.yaml (Jul 2026) and pdpc_ai_rds.yaml
+# (Mar 2024).
+controls:
+  - controlId: "s 26"
+    title: "Transfer Limitation Obligation — overseas transfer only under comparable protection"
+    description: "Personal data may be transferred overseas only where the recipient is bound to provide protection \"comparable\" to the PDPA. Under Part 3 of the Personal Data Protection Regulations 2021 the recipient must be \"bound by legally enforceable obligations\" — law, contract, \"binding corporate rules\" (which must specify the \"recipients of the transferred personal data\" and the \"countries and territories\") or \"any other legally binding instrument\"; APEC CBPR/PRP certification is \"deemed to be subject to enforceable obligations\"; exemptions include consent, contract necessity, data in transit and publicly available data. There is no data-localisation requirement. Pasting personal data into, or routing it to, a foreign-hosted AI service (consumer AI SaaS, or a model endpoint in an overseas cloud region) is an overseas transfer that typically lacks these enforceable obligations."
+    mappedCategories: [PII, PHI]
+    severity: critical
+    review: "# REVIEW: SSO unreachable; s 26 wording verified via DLA Piper (transfer page), Chambers 2026, Drew & Napier GTDT and OECD.AI; PDP Regulations 2021 regulation numbers (10–12) UNCONFIRMED and omitted — product owner to confirm"
+  - controlId: "s 24"
+    title: "Protection Obligation — reasonable security arrangements"
+    description: "An organisation must make \"reasonable security arrangements\" to prevent \"unauthorised access, collection, use, disclosure, copying, modification, disposal or loss of storage medium\" of personal data; data intermediaries are bound by this obligation too. Legal hook for DLP and AI-egress controls: personal data leaving to an unsanctioned AI service is an unauthorised disclosure that reasonable arrangements should have prevented or detected."
+    mappedCategories: [PII, PHI, PCI]
+    severity: high
+    review: "# REVIEW: SSO unreachable; s 24 wording verified via DLA Piper (law page) and Baker McKenzie Global Data & Cyber Handbook — product owner to confirm"
+  - controlId: "s 26D"
+    title: "Data breach notification to the PDPC within 3 calendar days"
+    description: "Mandatory data breach notification (Part 6A, ss 26A–26E, in force 1 Feb 2021): a breach is notifiable where there is \"significant harm to an affected individual\" (prescribed categories under the Personal Data Protection (Notification of Data Breaches) Regulations 2021) or \"500 or more affected individuals\"; the organisation must assess \"in a reasonable and expeditious manner\" (PDPC guidance: \"typically within 30 days\"), notify the PDPC \"no later than three calendar days\" after determining notifiability (s 26D(1)) and notify affected individuals where there is significant harm (s 26D(2)); a data intermediary must notify the organisation \"without undue delay\". Retained prompt and egress logs are what let an organisation assess what personal data left to an unsanctioned AI service and whether these thresholds are met."
+    mappedCategories: [PII, PHI]
+    severity: high
+    review: "# REVIEW: SSO unreachable; thresholds and 3-day deadline verified via Baker McKenzie handbook, DLA Piper and Covarage; NUMBERING HAZARD: the data-intermediary duty to notify the organisation is cited as s 26C(3)(a) by Baker McKenzie and as s 26E by other sources, so Part 6A section placement is unconfirmed — product owner to confirm"
+  - controlId: "s 11–12"
+    title: "Accountability Obligation — policies, practices and a designated compliance officer"
+    description: "An organisation must \"develop and implement policies and practices necessary to meet obligations; designate individual(s) responsible for compliance\" (the data protection officer). AI tools or agents discovered handling personal data with no owner and no policy coverage evidence a gap in these policies and practices."
+    mappedCategories: [PII, PHI, PCI]
+    severity: medium
+    review: "# REVIEW: SSO unreachable; ss 11–12 wording verified via DLA Piper and Drew & Napier GTDT — product owner to confirm"
+  - controlId: "s 48J"
+    title: "Financial penalties — up to 10% of Singapore turnover or S$1 million"
+    description: "Financial penalties (in force 1 Oct 2022): \"the maximum financial penalty ... whose annual turnover in Singapore exceeds S$10 million is 10% of the annual turnover in Singapore ... In any other case, the maximum financial penalty is S$1 million\" (Allen & Gledhill). Some guides phrase this as \"whichever is higher\", which is a simplification. Sets the regulatory exposure attached to an unremediated AI data-leakage event involving personal data."
+    mappedCategories: [PII, PHI, PCI]
+    severity: medium
+    review: "# REVIEW: SSO unreachable; s 48J wording verified via Allen & Gledhill note on the 1 Oct 2022 cap increase; the \"whichever is higher\" phrasing in other guides is noted as a simplification — product owner to confirm"
+  - controlId: "s 25"
+    title: "Retention Limitation Obligation"
+    description: "Retention Limitation Obligation — only the section number and title were verified in this research round; no statutory wording was read. Data intermediaries are bound by it as well. Relevance: personal data copied into an external AI tool or held in agent memory becomes a retained copy outside the organisation's retention schedule."
+    mappedCategories: [PII, PHI]
+    severity: low
+    review: "# REVIEW: SSO unreachable; section number and title only, via DLA Piper and Drew & Napier GTDT; no wording verified and severity is a judgment call — product owner to confirm"

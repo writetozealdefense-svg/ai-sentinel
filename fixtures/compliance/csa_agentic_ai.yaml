@@ -1,0 +1,81 @@
+framework: CSA_AGENTIC
+displayName: "CSA Securing Agentic AI — Addendum v1.0 (Jun 2026)"
+# Populated 2026-09-29. "Securing Agentic AI: An Addendum to the Guidelines and Companion Guide
+# on Securing AI Systems", Version 1.0, Cyber Security Agency of Singapore, "developed in
+# consultation with 20+ industry partners". Draft for consultation released 22 Oct 2025
+# (consultation 22 Oct–31 Dec 2025); FINAL v1.0 dated 17 Jun 2026. VOLUNTARY: "intended for
+# informational purposes only and is not mandatory, prescriptive nor exhaustive" (Executive
+# Summary). Audience: system owners deploying agentic AI; four lifecycle stages (Planning &
+# Design, Development, Deployment, Operations & Maintenance — End-of-Life is not repeated).
+# Risk framing (§3): rogue actions "occur when agents perform unintended, or harmful tasks";
+# sensitive data disclosure "occurs when attackers exploit agents to reveal private information
+# when agentic workflows are executed"; Annex A maps OWASP's 15 agentic threats. §4.1 Step 1
+# adds taint tracing — "tracking data flows from untrusted sources through agentic workflows".
+# Verification: the official CSA v1.0 PDF was fetched from isomer-user-content.by.gov.sg (URL in
+# SOURCES-SG.md), plus the CSA publication page, press release and Minister Teo's 22 Oct 2025
+# speech; Baker McKenzie and Rajah & Tann notes cross-checked. CAVEATS: the CSA publication page
+# still carries the consultation-era description text, and neither law-firm note identifies what
+# changed between draft and final — control numbers below are the §4.2 numbering as read in the
+# fetched v1.0 PDF. Control 4.4's exact halt/override wording was not verified. The addendum has
+# no explicit "shadow"/"unsanctioned" agent language; mapping is by control substance.
+controls:
+  - controlId: "Control 2.6"
+    title: "Trusted registry of agent identities; allow-list for outward network access"
+    description: "Authentication and authorisation \"to APIs, models, data, logs, tools and the environments\": \"Maintain trusted registry of agent identities and authenticate agents using strong, verifiable credentials\"; \"differentiate between non-human and human identities\" (§2.2.2); DIDs and scoped, time-bound tokens; \"Implement a whitelist approach for outward network access, including API requests.\" A non-human identity calling a model API that is absent from the registry, or AI egress to a destination outside the allow-list, maps directly here."
+    mappedCategories: [OTHER, SECRET]
+    severity: critical
+    review: "# REVIEW: verified from the official CSA Addendum v1.0 PDF (17 Jun 2026); CSA page still shows consultation-era text and draft-to-final changes are unidentified — product owner to confirm"
+  - controlId: "Control 2.7"
+    title: "Scope agent privileges — tools and APIs only as necessary"
+    description: "\"limit what models or agents can access and generate\": \"Scope agent privileges dynamically: strict access of tools and API only to what is necessary\"; whitelist files the agent may touch; constrain computer use. A discovered agent whose tool or API grants exceed its recorded task scope maps here."
+    mappedCategories: [OTHER, SECRET]
+    severity: high
+    review: "# REVIEW: verified from the official CSA Addendum v1.0 PDF (17 Jun 2026); draft-to-final changes unidentified — product owner to confirm"
+  - controlId: "Control 2.8"
+    title: "Least privilege and secure by default — block all network access by default"
+    description: "Least privilege / secure-by-default: \"Block all inward and outward network access by default.\"; no admin/sudo by default; no database write access unless required. Workloads or agents reaching AI endpoints from environments without default-deny egress map here."
+    mappedCategories: [OTHER, PII, PHI, PCI]
+    severity: high
+    review: "# REVIEW: verified from the official CSA Addendum v1.0 PDF (17 Jun 2026); draft-to-final changes unidentified — product owner to confirm"
+  - controlId: "Control 2.4"
+    title: "Identify, track and protect AI system assets — document models, agents and tools"
+    description: "\"documenting the data, codes, test cases, models and agents, including any changes made and by whom\"; \"provide comprehensive descriptions of each tool, including its intended use, required inputs, and potential outputs\"; SBOMs, model cards and agent cards. An agent framework, tool schema or system prompt discovered in code with no corresponding agent-inventory entry maps here."
+    mappedCategories: [CODE, OTHER]
+    severity: high
+    review: "# REVIEW: verified from the official CSA Addendum v1.0 PDF (17 Jun 2026); draft-to-final changes unidentified — product owner to confirm"
+  - controlId: "Control 4.3"
+    title: "Continuous monitoring and logging of agent actions and tool calls into a SIEM"
+    description: "\"Actions, interactions and tool calls made by the AI is recorded and sent to a security dashboard for oversight\"; \"logs from the middleware should be streamed into a SIEM for SOC monitoring, with processes in-place to revoke agent access when anomalous access is detected\"; maintain an audit trail for forensics. Model invocations or tool calls observed in egress but absent from SIEM-ingested logs map here."
+    mappedCategories: [OTHER, PII, PHI, PCI]
+    severity: high
+    review: "# REVIEW: verified from the official CSA Addendum v1.0 PDF (17 Jun 2026); draft-to-final changes unidentified — product owner to confirm"
+  - controlId: "Control 3.3"
+    title: "External tools and MCP servers — verify sources, detect MCP rug pulls"
+    description: "\"Check that an MCP server has not silently redefined their tools (MCP rug pull)\"; verify MCP sources; context-level access controls; allowlists, mTLS, OAuth 2.1/OIDC (Annex B covers MCP). MCP servers found in mcp.json or IDE configs from unverified sources, or tool-definition drift over time, map here."
+    mappedCategories: [CODE, OTHER]
+    severity: high
+    review: "# REVIEW: verified from the official CSA Addendum v1.0 PDF (17 Jun 2026); draft-to-final changes unidentified — product owner to confirm"
+  - controlId: "Control 2.3"
+    title: "System hardening — do not hardcode secrets"
+    description: "\"Do not hardcode secrets.\" (secrets managers are named). Secrets-scan hits for AI-provider API keys in code, configuration or CI logs map directly here."
+    mappedCategories: [SECRET]
+    severity: high
+    review: "# REVIEW: verified from the official CSA Addendum v1.0 PDF (17 Jun 2026); draft-to-final changes unidentified — product owner to confirm"
+  - controlId: "Control 2.1"
+    title: "Supply chain security — vet models, agents, libraries and MCP server packages"
+    description: "Vet data, models, agents, libraries and MCP server packages: \"Do not use LLMs from unknown or untrusted sources\"; \"Exercise caution when using community-run MCP servers\"; SCA scanning (pip-audit, Snyk named). Unvetted model sources or community MCP packages observed in repositories or egress map here."
+    mappedCategories: [CODE, OTHER]
+    severity: medium
+    review: "# REVIEW: verified from the official CSA Addendum v1.0 PDF (17 Jun 2026); draft-to-final changes unidentified — product owner to confirm"
+  - controlId: "Control 2.9"
+    title: "Segmentation and sandboxing of tools and generated code"
+    description: "\"Test third-party tools in hardened sandboxes with syscall/network egress restrictions\"; run code in isolated containers; sandbox AI-generated scripts. Tool or agent code executing outside a sandbox, or sandbox egress reaching unexpected AI destinations, maps here."
+    mappedCategories: [CODE, OTHER]
+    severity: medium
+    review: "# REVIEW: verified from the official CSA Addendum v1.0 PDF (17 Jun 2026); draft-to-final changes unidentified — product owner to confirm"
+  - controlId: "Control 4.4"
+    title: "Human-in-the-loop for high-risk actions"
+    description: "Human approval before high-risk agent actions, with the ability to halt or override the agent. An agent observed performing sensitive actions with no approval gate maps here."
+    mappedCategories: [OTHER]
+    severity: medium
+    review: "# REVIEW: control number and substance from the official CSA Addendum v1.0 PDF (17 Jun 2026), but the EXACT halt/override (terminate) wording was NOT verified — the fetch summarised this control; draft-to-final changes unidentified — product owner to confirm"

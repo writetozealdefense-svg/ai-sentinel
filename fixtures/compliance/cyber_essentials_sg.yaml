@@ -1,0 +1,45 @@
+framework: CSA_CYBER_ESSENTIALS
+displayName: "CSA Cyber Essentials mark v202503 (Mar 2025)"
+# Populated 2026-09-29. Cyber Security Agency of Singapore, Cyber Essentials mark, version 202503
+# (Mar 2025) — the cloud, AI and OT expansion announced by CSA on 15 Apr 2025. VOLUNTARY
+# CERTIFICATION mark; the AI content sits in the assessment templates (clauses A.n.4). This is
+# the one Singapore instrument that uses the term "shadow AI" verbatim (A.2.4(a)). CSA press
+# release framing: visibility of "Bring Your Own AI" — "third-party AI tools used by its
+# employees but not provided by the organisation" — because "any compromise could lead to
+# leakage of confidential data".
+# Verification: the official PDF ("20250307 Cyber Essentials V202503.pdf") was fetched from
+# isomer-user-content.by.gov.sg and read; the CSA press release of 15 Apr 2025 was opened.
+# The sibling Cyber Trust mark v202504 (B.3.1, B.3.5, AI Risk 8: "Employee submits proprietary
+# information into external generative AI tool not authorised by organisation") is NOT mapped
+# here.
+controls:
+  - controlId: "A.2.4(a)"
+    title: "Asset inventory includes AI tools and services (shadow AI)"
+    description: "The asset inventory \"shall include any usage of, or subscription to, AI tools or services, such as: free or public AI services; and enterprise AI tools. This inclusion aims to mitigate the risks associated with 'shadow AI' within the organisation.\" A discovered AI tool or subscription that is not in the inventory maps directly here."
+    mappedCategories: [OTHER]
+    severity: high
+    review: "# REVIEW: verified from the official CSA PDF (20250307 Cyber Essentials V202503.pdf); voluntary certification mark — product owner to confirm"
+  - controlId: "A.5.4(a)"
+    title: "Inventory of access to AI tools — login accounts and APIs"
+    description: "\"The inventory shall include the organisation's access to its AI tools and services, e.g. login accounts, APIs.\" AI-provider accounts and API keys found in code, CI logs or egress that are absent from the access inventory map here."
+    mappedCategories: [SECRET, OTHER]
+    severity: high
+    review: "# REVIEW: verified from the official CSA PDF (20250307 Cyber Essentials V202503.pdf); voluntary certification mark — product owner to confirm"
+  - controlId: "A.3.4(d)"
+    title: "Control data input to external or public AI tools"
+    description: "Control data \"input to external or public AI tools and services, e.g., mitigate against data leakage\". A.3.4(a) also asks for an inventory of the data sets \"used as input to AI tools or services\" and \"generated as output\". Sensitive data observed flowing to an external AI tool is the direct case."
+    mappedCategories: [PII, PHI, PCI]
+    severity: high
+    review: "# REVIEW: verified from the official CSA PDF (20250307 Cyber Essentials V202503.pdf); voluntary certification mark — product owner to confirm"
+  - controlId: "A.6.4(g)"
+    title: "Enable audit logs for AI tools and services"
+    description: "\"The organisation shall enable audit logs for its AI tools and services if such logging is supported.\" AI tools in use whose audit logging is disabled, or for which no logging status is known, map here."
+    mappedCategories: [OTHER]
+    severity: medium
+    review: "# REVIEW: verified from the official CSA PDF (20250307 Cyber Essentials V202503.pdf); voluntary certification mark — product owner to confirm"
+  - controlId: "A.9.4(a)"
+    title: "Incident-response scenario — disclosure of sensitive information to external AI tools"
+    description: "Incident-response scenarios such as \"employees' disclosure of sensitive organisational information to external AI tools or services\". A confirmed disclosure event should invoke this playbook."
+    mappedCategories: [PII, PHI, PCI, SECRET, CODE]
+    severity: medium
+    review: "# REVIEW: verified from the official CSA PDF (20250307 Cyber Essentials V202503.pdf); voluntary certification mark — product owner to confirm"

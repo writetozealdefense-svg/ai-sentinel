@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import {
-  ShieldHalf,
   Activity,
   Radar,
   Scale,
@@ -30,11 +30,16 @@ export function Nav() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-8">
         <Link href="/" className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-accent-blue/40 bg-accent-blue/10 shadow-glow">
-            <ShieldHalf className="h-5 w-5 text-accent-blue" />
+            <Image
+              src="/zeal-defense-mark.svg"
+              alt="AI Sentinel"
+              width={30}
+              height={30}
+              priority
+            />
           </div>
           <div className="leading-tight">
             <span className="text-sm font-bold tracking-tight text-glow-blue">
-              ZealDefense{" "}
               <span className="text-accent-purple text-glow-purple">
                 AI Sentinel
               </span>

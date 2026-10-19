@@ -1,0 +1,56 @@
+framework: IMDA_MGF_AGENTIC
+displayName: "IMDA Model AI Governance Framework for Agentic AI (v1.0 Jan 2026, updated May 2026)"
+# Populated 2026-09-29. "Model AI Governance Framework for Agentic AI", Version 1.0, Infocomm
+# Media Development Authority (IMDA), published 22 Jan 2026; updated edition released 20 May 2026
+# (IMDA factsheet; Baker McKenzie; Allen & Gledhill). Latham & Watkins calls the update
+# "Version 1.5" (20 May, updated 5 Jun 2026) — VERSION LABEL UNCONFIRMED on the IMDA pages
+# opened. VOLUNTARY "living document" guidance for "organisations looking to deploy agentic AI,
+# whether by developing AI agents in-house or using third-party agentic solutions". Four
+# dimensions: 2.1 "Assess and bound the risks upfront"; 2.2 "Make humans meaningfully
+# accountable"; 2.3 "Implement technical controls and processes"; 2.4 "Enable end-user
+# responsibility". No explicit inventory/registry practice exists in v1.0 — 2.1.2 (unique agent
+# identity, recorded delegations) is the nearest hook; 2.1.1 references CSA taint tracing "to map
+# out all the workflows and interactions". Defers personal-data matters to the PDPA (pdpa_sg.yaml).
+# Verification: the official IMDA v1.0 PDF (mgf-for-agentic-ai.pdf) was fetched and read; the
+# IMDA press release (Jan 2026) and factsheet (May 2026) were opened; Baker McKenzie, A&G and L&W
+# notes cross-checked. Section numbers are from the v1.0 PDF. The May 2026 update (practices for
+# multi-agent systems and third-party agents, automation bias, platform-provider vs developer
+# roles, change management, monitoring "human override rates and response times") was read only
+# via the factsheet and law-firm notes, so numbering in the updated edition is UNVERIFIED.
+controls:
+  - controlId: "2.1.2"
+    title: "Minimum tools and data access; recorded delegations; unique agent identity"
+    description: "\"Define policies that give agents only the minimum tools and data access needed for it to complete its task\"; \"Such delegations of authority should be clearly recorded\"; \"An agent should have its own unique identity, such that it can identify itself to the organisation, its human user, or other agents\". Nearest v1.0 hook for an agent inventory: an agent discovered in code or telemetry with no unique identity or recorded delegation maps here."
+    mappedCategories: [OTHER]
+    severity: high
+    review: "# REVIEW: verified from the official IMDA v1.0 PDF (Jan 2026); numbering in the May 2026 updated edition (version label unconfirmed — v1.5 per Latham & Watkins only) not re-checked — product owner to confirm"
+  - controlId: "2.3.1"
+    title: "Least privilege for tools; MCP server whitelist; sandboxed code execution; no write access to sensitive tables"
+    description: "\"Apply the principle of least privilege to limit tools available to each agent, enforced through robust authentication\"; for MCP, \"Whitelist trusted servers and only allow agent to interact with servers on that whitelist\"; \"Sandbox any code execution\"; \"Do not grant agent write access to tables in sensitive databases unless strictly required\"; \"Configure tools to require strict input formats\"; \"Log the agent's plan and reasoning for the user to evaluate\". MCP or tool endpoints contacted by an agent that are not on the whitelist map here."
+    mappedCategories: [OTHER, CODE]
+    severity: high
+    review: "# REVIEW: verified from the official IMDA v1.0 PDF (Jan 2026); numbering in the May 2026 updated edition not re-checked — product owner to confirm"
+  - controlId: "2.3.3"
+    title: "Log and trace each workflow step; alert on unauthorised access or repeated tool calls"
+    description: "\"Logging and tracing each step of an agent workflow and agent-to-agent interactions help to identify points of failure\"; \"Define alerts when agents trigger thresholds e.g. agent attempts unauthorised access or makes too many repeated tool calls\"; anomaly detection, with higher-priority alerts possibly \"temporarily halting agent execution\"; phased rollout (\"gradually rolling out agents into production\") and continuous post-deployment testing. Trace-coverage gaps or unalerted access anomalies in AI logs map here."
+    mappedCategories: [OTHER, PII, PHI, PCI]
+    severity: high
+    review: "# REVIEW: verified from the official IMDA v1.0 PDF (Jan 2026); numbering in the May 2026 updated edition not re-checked — product owner to confirm"
+  - controlId: "2.2.2"
+    title: "Human checkpoints before sensitive or irreversible actions; escalate out-of-scope access"
+    description: "Human approval \"before sensitive actions\" and before irreversible ones (\"permanently deleting data, sending communications, making payments\"); escalate \"when agent accesses a system or database outside of its work scope\"; \"automated real-time monitoring to escalate any unexpected or anomalous behaviour\". An agent reaching systems outside its recorded scope with no escalation maps here."
+    mappedCategories: [OTHER]
+    severity: medium
+    review: "# REVIEW: verified from the official IMDA v1.0 PDF (Jan 2026); numbering in the May 2026 updated edition not re-checked — product owner to confirm"
+  - controlId: "2.4.2"
+    title: "Clarity on user data collection and explicit consent"
+    description: "\"Be clear on how user data is collected, stored, and used by the agents\"; \"obtain explicit consent from users before collecting or using their data for the agents\". Dimension 2.4 also asks that users be informed of the \"scope of agent's access to user's data, actions the agent can take\" and that organisations \"Declare upfront that the users are interacting with agents\". Personal data reaching an agent whose data-access scope was never disclosed to users maps here."
+    mappedCategories: [PII, PHI]
+    severity: medium
+    review: "# REVIEW: verified from the official IMDA v1.0 PDF (Jan 2026); numbering in the May 2026 updated edition not re-checked — product owner to confirm"
+  - controlId: "2.3.2"
+    title: "Pre-deployment testing — policy compliance and tool-calling accuracy"
+    description: "Pre-deployment tests for task execution, \"Policy compliance: Whether an agent follows defined SOPs\", tool-calling accuracy (\"right tools, with the right permissions, with the right inputs and in the right order\"), robustness and multi-agent-level testing in production-like environments. Agents found running in production with no test evidence map here."
+    mappedCategories: [OTHER, CODE]
+    severity: low
+    review: "# REVIEW: verified from the official IMDA v1.0 PDF (Jan 2026); numbering in the May 2026 updated edition not re-checked — product owner to confirm"

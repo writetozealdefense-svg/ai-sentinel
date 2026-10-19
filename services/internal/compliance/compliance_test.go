@@ -2,6 +2,7 @@ package compliance
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -28,11 +29,11 @@ func loadSet(t *testing.T) *Set {
 	return s
 }
 
-// TestPIIMapsToSevenFrameworks asserts the Scenario-1 mapping rule: a PII finding
-// produces exactly one matched control per regional + documented framework that
-// covers PII, with control IDs sourced verbatim from the fixtures (including the
-// TODO-VERIFY placeholders for regional frameworks). HIPAA (PHI-only) must NOT match.
-func TestPIIMapsToSevenFrameworks(t *testing.T) {
+// TestPIIMapsOnePerFramework asserts the Scenario-1 mapping rule: a PII finding
+// produces exactly one matched control per framework that covers PII (the
+// highest-severity control; on a tie the first-loaded control wins), with control
+// IDs sourced verbatim from the fixtures. HIPAA (PHI-only) must NOT match.
+func TestPIIMapsOnePerFramework(t *testing.T) {
 	s := loadSet(t)
 	matches := s.MatchFrameworks([]string{"PII"})
 
@@ -45,16 +46,29 @@ func TestPIIMapsToSevenFrameworks(t *testing.T) {
 	}
 
 	// Expected framework -> expected control ID, all sourced from the fixtures.
-	// Documented frameworks select their highest-severity PII control; regional
-	// frameworks carry the verbatim TODO-VERIFY placeholder (Brief R5).
+	// Each framework selects its highest-severity PII control; DPDPA still carries
+	// the verbatim TODO-VERIFY placeholder and MAS_AIRG its PROPOSED-* id (Brief R5).
 	want := map[string]string{
+		// Global frameworks
 		"GDPR":        "Art. 5(1)(f)", // tie at "high" with Art. 32; first-loaded wins deterministically
 		"ISO27001":    "A.5.34",       // tie at "high"; first-loaded wins
 		"NIST_AI_RMF": "GOVERN 1.1",   // highest severity (high) PII control
-		"PDPL":        "TODO-VERIFY",
-		"NCA_ECC":     "TODO-VERIFY",
-		"SAMA_CSF":    "TODO-VERIFY",
-		"DPDPA":       "TODO-VERIFY",
+		// Gulf and India
+		"PDPL":     "Article 29",           // critical
+		"NCA_ECC":  "2-7-2",                // critical
+		"SAMA_CSF": "3.3.8",                // critical
+		"SDAIA_AI": "GAIG-GOV-ProhibInput", // critical
+		"DPDPA":    "TODO-VERIFY",
+		// Singapore
+		"PDPA_SG":              "s 26",                // critical
+		"MAS_TRM":              "11.1.5",              // critical
+		"MAS_AIRG":             "PROPOSED-Monitoring", // medium; placeholder until the final MAS text is mapped
+		"PDPC_GENAI":           "para 9.3",            // high
+		"PDPC_AI_RDS":          "para 11.2",           // medium
+		"CSA_AI_SEC":           "Guidelines §4.1",     // high
+		"CSA_AGENTIC":          "Control 2.8",         // high; tie, first-loaded wins
+		"CSA_CYBER_ESSENTIALS": "A.3.4(d)",            // high
+		"IMDA_MGF_AGENTIC":     "2.3.3",               // high; tie, first-loaded wins
 	}
 
 	if len(got) != len(want) {
@@ -80,22 +94,26 @@ func TestPIIMapsToSevenFrameworks(t *testing.T) {
 	}
 }
 
-// TestRegionalControlsArePlaceholders confirms the TODO-VERIFY placeholders and
-// review markers are preserved (never invented).
-func TestRegionalControlsArePlaceholders(t *testing.T) {
+// TestUnverifiedControlsKeepReviewMarkers confirms that placeholder control IDs
+// (TODO-VERIFY, PROPOSED-*) are never shown without their review marker, and that
+// the unverified DPDPA pack is still a placeholder (never invented).
+func TestUnverifiedControlsKeepReviewMarkers(t *testing.T) {
 	s := loadSet(t)
-	for _, fw := range []string{"PDPL", "NCA_ECC", "SAMA_CSF", "DPDPA"} {
-		f, ok := s.Framework(fw)
-		if !ok {
-			t.Fatalf("framework %s not loaded", fw)
-		}
+	for _, f := range s.Frameworks() {
 		for _, c := range f.Controls {
-			if c.ControlID != "TODO-VERIFY" {
-				t.Fatalf("%s control ID = %q, want TODO-VERIFY placeholder", fw, c.ControlID)
+			unverified := c.ControlID == "TODO-VERIFY" || strings.HasPrefix(c.ControlID, "PROPOSED-")
+			if unverified && !IsReview(c) {
+				t.Fatalf("%s control %q is a placeholder but lost its review marker", f.Framework, c.ControlID)
 			}
-			if !IsReview(c) {
-				t.Fatalf("%s control %q lost its review marker", fw, c.ControlID)
-			}
+		}
+	}
+	dpdpa, ok := s.Framework("DPDPA")
+	if !ok {
+		t.Fatal("framework DPDPA not loaded")
+	}
+	for _, c := range dpdpa.Controls {
+		if c.ControlID != "TODO-VERIFY" {
+			t.Fatalf("DPDPA control ID = %q, want TODO-VERIFY placeholder", c.ControlID)
 		}
 	}
 }

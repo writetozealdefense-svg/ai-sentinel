@@ -16,7 +16,7 @@ const sans = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ZealDefense AI Sentinel",
+  title: "AI Sentinel",
   description: "AI Security Posture Management — SOC & Compliance dashboards",
 };
 

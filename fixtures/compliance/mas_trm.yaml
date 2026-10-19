@@ -1,0 +1,68 @@
+framework: MAS_TRM
+displayName: "MAS Technology Risk Management Guidelines (Jan 2021)"
+# Populated 2026-09-29. Issued by the Monetary Authority of Singapore on 18 Jan 2021 (revising
+# the 2013 edition); in effect; applies to all MAS-regulated financial institutions
+# proportionately ("commensurate with the level of risk and complexity", para 2.2).
+# SUPERVISORY EXPECTATION, NOT BINDING: "The Guidelines do not affect, and should not be regarded
+# as a statement of the standard of care ... the degree of observance with the spirit of the
+# Guidelines by an FI is an area of consideration by MAS" (para 2.2); "not intended to be
+# comprehensive nor replace or override any legislative provisions" (para 2.3). Binding
+# requirements sit in the separate MAS TRM Notices (incident notification to MAS within 1 hour;
+# root-cause report within 14 days) and the MAS Notice on Cyber Hygiene (2019) — neither is
+# mapped here. Cloud is handled through section 3.4 and the Outsourcing Guidelines; there is no
+# cloud-specific section beyond 11.1.1(b).
+# Verification caveat: mas.gov.sg was blocked at the egress proxy, so the official MAS PDF was
+# NOT read. Paragraph text and numbers come from an UNOFFICIAL GitHub reproduction of the 2021
+# Guidelines (gist.github.com/nth-block), corroborated by Oracle, BeyondTrust, Silverfort and PwC
+# papers that quote the same paragraphs — the brief lists 3.3.2, 3.4.x, 9.x, 11.x, 12.x and 13.x
+# as corroborated; 6.4.x and 6.5.x are NOT in that corroborated list. Product owner MUST verify
+# every paragraph number against the MAS PDF before removing markers.
+controls:
+  - controlId: "11.1.5"
+    title: "Prevent and detect use of unauthorised internet services for confidential data"
+    description: "Data security: \"Security measures should be implemented to prevent and detect the use of unauthorised internet services which allow users to communicate or store confidential data.\" Related 11.1.4: \"only authorised data storage media, systems and endpoint devices are used to communicate, transfer, or store confidential data\". Confidential data observed leaving to an unsanctioned AI SaaS (chat, code-assist, transcription) is the direct case; proxy/DNS/NetFlow evidence of AI domains with data volumes is the detection evidence."
+    mappedCategories: [PII, PHI, PCI, SECRET]
+    severity: critical
+    review: "# REVIEW: paragraph number from unofficial reproduction (gist.github.com/nth-block); 11.x corroborated by Oracle/BeyondTrust/Silverfort papers; MAS PDF not opened (mas.gov.sg blocked) — product owner to confirm"
+  - controlId: "6.5.2"
+    title: "Shadow IT managed as information assets; control and monitor its use"
+    description: "Management of end user computing and applications — 6.5.1: \"IT hardware, software and services that are not managed by the IT department (shadow IT) increase the FI's exposure to risks such as leakage of sensitive data ... Shadow IT should be managed as part of the FI's information assets.\"; 6.5.2: \"The FI should establish measures to control and monitor the use of shadow IT in its environment.\" The shadow-AI census itself (unregistered AI SaaS, personal API keys, unmanaged agents) is the evidence for this control."
+    mappedCategories: [OTHER, PII, PHI, PCI, SECRET, CODE]
+    severity: high
+    review: "# REVIEW: paragraph number from unofficial reproduction (gist.github.com/nth-block); 6.5.x is NOT among the paragraphs the brief lists as corroborated by vendor papers; MAS PDF not opened (mas.gov.sg blocked) — product owner to confirm"
+  - controlId: "3.3.2"
+    title: "Inventory of all information assets, updated on change"
+    description: "Management of information assets: \"The FI should maintain an inventory of all its information assets. The inventory should be reviewed periodically and updated whenever there are changes.\" (3.3.1: \"establish information asset management practices\"). AI services, models and agents discovered outside the information-asset inventory map here, with discovery timestamps as the update evidence."
+    mappedCategories: [OTHER]
+    severity: high
+    review: "# REVIEW: paragraph number from unofficial reproduction (gist.github.com/nth-block); 3.3.2 corroborated by Oracle/BeyondTrust/Silverfort papers; MAS PDF not opened (mas.gov.sg blocked) — product owner to confirm"
+  - controlId: "11.1.1–11.1.2"
+    title: "Data loss prevention policies for data in motion, at rest and in use"
+    description: "\"comprehensive data loss prevention policies\" covering data in motion, at rest and in use (cloud storage is named in 11.1.1(b)); 11.1.2: \"prevent and detect data theft, as well as unauthorised modification\". Personal, health or cardholder data detected in outbound AI traffic is a DLP-policy coverage failure."
+    mappedCategories: [PII, PHI, PCI]
+    severity: high
+    review: "# REVIEW: paragraph numbers from unofficial reproduction (gist.github.com/nth-block); 11.x corroborated by Oracle/BeyondTrust/Silverfort papers; MAS PDF not opened (mas.gov.sg blocked) — product owner to confirm"
+  - controlId: "9.2.2"
+    title: "Monitor system and service accounts for suspicious or unauthorised activity"
+    description: "Privileged access management: \"establish a process to manage and monitor the use of system and service accounts for suspicious or unauthorised activities\" (9.2.1: need-to-use basis, logged). Service accounts and non-human identities invoking model APIs outside expected patterns map here."
+    mappedCategories: [OTHER, SECRET]
+    severity: medium
+    review: "# REVIEW: paragraph number from unofficial reproduction (gist.github.com/nth-block); 9.x corroborated by Oracle/BeyondTrust/Silverfort papers; MAS PDF not opened (mas.gov.sg blocked) — product owner to confirm"
+  - controlId: "12.2.2"
+    title: "Collect, review and retain system logs"
+    description: "Cyber event monitoring and detection: \"A process to collect, process, review and retain system logs should be established ... protected against unauthorised access.\" (12.2.1 SOC or managed security services; 12.2.3 baseline profiles and deviation analysis; 12.2.4 user behavioural analytics; 12.2.5 log correlation). AI platforms whose invocation logs are not collected or retained map here."
+    mappedCategories: [OTHER, PII, PHI, PCI]
+    severity: medium
+    review: "# REVIEW: paragraph number from unofficial reproduction (gist.github.com/nth-block); 12.x corroborated by Oracle/BeyondTrust/Silverfort papers; MAS PDF not opened (mas.gov.sg blocked) — product owner to confirm"
+  - controlId: "3.4.2"
+    title: "Assess third-party technology risk before contracting"
+    description: "Management of third party services — 3.4.1 covers services \"provisioned or delivered using IT, or may involve confidential or sensitive customer information\"; 3.4.2: \"assess and manage its exposure to technology risks ... at the third party before entering into a contractual agreement\"; 3.4.3: ongoing assurance of \"a high standard of care and diligence in protecting data confidentiality and integrity\"; 4.2.1: identify threats to \"information assets that are maintained or supported by third party service providers\". A discovered-but-uncontracted AI vendor with no third-party risk record maps here."
+    mappedCategories: [OTHER]
+    severity: medium
+    review: "# REVIEW: paragraph number from unofficial reproduction (gist.github.com/nth-block); 3.4.x corroborated by Oracle/BeyondTrust/Silverfort papers; MAS PDF not opened (mas.gov.sg blocked) — product owner to confirm"
+  - controlId: "6.4.2"
+    title: "Vetting process for third parties connecting via APIs"
+    description: "Application programming interface development: \"a well-defined vetting process for assessing third parties' suitability in connecting to the FI via APIs\" (6.4.3: risk assessment before allowing API connections). Third-party AI or MCP endpoints connected by API without vetting map here."
+    mappedCategories: [OTHER, CODE]
+    severity: low
+    review: "# REVIEW: paragraph number from unofficial reproduction (gist.github.com/nth-block); 6.4.x is NOT among the paragraphs the brief lists as corroborated by vendor papers; MAS PDF not opened (mas.gov.sg blocked) — product owner to confirm"

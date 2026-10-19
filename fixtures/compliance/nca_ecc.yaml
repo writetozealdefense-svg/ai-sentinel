@@ -1,11 +1,71 @@
 framework: NCA_ECC
-displayName: "Saudi NCA Essential Cybersecurity Controls (ECC)"
-# Brief R5: NCA ECC clause numbers are NOT populated from memory. The product owner — who
-# can authoritatively cite these — must fill in controlId values. Do not guess them.
+displayName: "Saudi NCA Essential Cybersecurity Controls (ECC-2:2024)"
+# Populated 2026-08-10 from the OFFICIAL NCA English PDF of ECC-2:2024 (supersedes ECC-1:2018).
+#   Document: "Essential Cybersecurity Controls (ECC - 2: 2024)" - 4 domains, 28 subdomains, 108 controls.
+#   Source page: https://nca.gov.sa/en/regulatory-documents/controls-list/ecc/
+#   Source PDF:  https://cdn.nca.gov.sa/api/files/public/upload/86e09090-44e4-481f-bc28-355673607654_ECC--2024-EN.pdf
+# Every control below was verified against the fetched official PDF. Review markers stay
+# until the product owner signs off (Brief R5); reviewRequired:true is surfaced until then.
+# NOTE: NCA's "AI Cybersecurity Guidelines" (AICG-1:2026) is DRAFT (consultation closed
+# 2026-08-05, final pending) - intentionally NOT shipped as a framework yet.
 controls:
-  - controlId: "TODO-VERIFY"
-    title: "Data leakage / sensitive data protection (placeholder)"
-    description: "Map to the relevant ECC domain for protecting sensitive data from AI exfiltration."
-    mappedCategories: [PII, PHI, PCI, SECRET]
+  - controlId: "2-7-1"
+    title: "Data and Information Protection — requirements defined"
+    description: "Cybersecurity requirements for protecting and handling the entity's data and information must be identified, documented, and approved per legislative and regulatory requirements. Violated when sensitive data is handled through channels (e.g., external AI tools) outside the approved requirements."
+    mappedCategories: [PII, PHI, PCI, SECRET, CODE]
     severity: high
-    review: "# REVIEW: verify control ID — product owner to supply authoritative NCA ECC clause"
+    review: "# REVIEW: verified against official ECC-2:2024 EN PDF (subdomain 2-7) — product owner to confirm"
+  - controlId: "2-7-2"
+    title: "Data protection implemented per classification level"
+    description: "Data protection requirements must be implemented based on the data's classification level. Classified/sensitive data submitted to an unapproved external AI service breaches classification-based handling."
+    mappedCategories: [PII, PHI, PCI, SECRET]
+    severity: critical
+    review: "# REVIEW: verified against official ECC-2:2024 EN PDF (subdomain 2-7) — product owner to confirm"
+  - controlId: "2-1-3"
+    title: "Acceptable use policy for information and technology assets"
+    description: "An acceptable-use policy must be defined, documented, approved and communicated (2-1-4: implemented). Use of unapproved external AI/SaaS tools with corporate data falls outside acceptable use."
+    mappedCategories: [PII, SECRET, CODE]
+    severity: medium
+    review: "# REVIEW: verified against official ECC-2:2024 EN PDF (subdomain 2-1) — product owner to confirm"
+  - controlId: "2-1-5"
+    title: "Asset classification, labeling and handling"
+    description: "Information and technology assets must be classified, labeled and handled per relevant legislative and regulatory requirements — the prerequisite for classification-aware AI-egress decisions."
+    mappedCategories: [PII, PHI, PCI]
+    severity: medium
+    review: "# REVIEW: verified against official ECC-2:2024 EN PDF (subdomain 2-1) — product owner to confirm"
+  - controlId: "2-2-3-3"
+    title: "Access on need-to-know, least privilege, segregation of duties"
+    description: "User authorization must follow need-to-know/need-to-use, least privilege and segregation of duties. Credential/secret exposure to AI tools defeats least-privilege containment."
+    mappedCategories: [SECRET]
+    severity: high
+    review: "# REVIEW: verified against official ECC-2:2024 EN PDF (subdomain 2-2, IAM subcontrols) — product owner to confirm"
+  - controlId: "2-12-3-2"
+    title: "Event logging for critical and privileged access"
+    description: "Event logs must be activated for critical/privileged accounts and remote access (2-12-3-1: all critical information assets). AI-channel egress of privileged material must be logged and reviewable."
+    mappedCategories: [SECRET, CODE]
+    severity: medium
+    review: "# REVIEW: verified against official ECC-2:2024 EN PDF (subdomain 2-12) — product owner to confirm"
+  - controlId: "2-12-3-4"
+    title: "Continuous monitoring of cybersecurity event logs"
+    description: "Cybersecurity event logs must be continuously monitored (2-12-3-3: SIEM collection; 2-12-3-5: >=12-month retention). Shadow-AI usage and sensitive-data egress belong in continuous monitoring scope."
+    mappedCategories: [PII, SECRET]
+    severity: medium
+    review: "# REVIEW: verified against official ECC-2:2024 EN PDF (subdomain 2-12) — product owner to confirm"
+  - controlId: "4-1-2-1"
+    title: "Third-party contracts: non-disclosure and secure data removal"
+    description: "Contracts/SLAs with third parties handling entity data must include non-disclosure clauses and secure removal of entity data upon service end (4-1-2-3: third party applies the entity's cybersecurity requirements). Sending entity data to an uncontracted AI vendor bypasses this control."
+    mappedCategories: [PII, PCI, SECRET]
+    severity: high
+    review: "# REVIEW: verified against official ECC-2:2024 EN PDF (subdomain 4-1) — product owner to confirm"
+  - controlId: "4-2-1"
+    title: "Cloud computing and hosting cybersecurity requirements"
+    description: "Cybersecurity requirements for cloud computing and hosting services must be identified, documented and approved (4-2-2: implemented). Unsanctioned AI-SaaS usage is cloud usage outside the approved requirement set."
+    mappedCategories: [PII, SECRET, CODE]
+    severity: high
+    review: "# REVIEW: verified against official ECC-2:2024 EN PDF (subdomain 4-2) — product owner to confirm"
+  - controlId: "4-2-3-1"
+    title: "Provider protects entity data per classification level"
+    description: "Cloud/hosting providers must protect entity data per its classification level and return it in usable format on service completion (4-2-3-2: tenant separation). Classified data in consumer-grade AI services violates this."
+    mappedCategories: [PII, PHI, PCI]
+    severity: high
+    review: "# REVIEW: verified against official ECC-2:2024 EN PDF (subdomain 4-2) — product owner to confirm"

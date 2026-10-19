@@ -1,0 +1,23 @@
+[intro]
+ZealDefense AI Sentinel. Discover. Govern. Secure. Every AI interaction. This is a live walkthrough of how the platform turns shadow AI usage into evidence a Singapore regulator will accept.
+
+[executive]
+Your employees are already using ChatGPT, DeepSeek, Claude and Gemini with corporate data. The Executive dashboard discovers this shadow AI automatically: every unsanctioned tool flagged, every interaction inspected and risk scored. Detection here is real — Microsoft Presidio, YARA rules and custom regex — never scripted.
+
+[soc]
+The SOC view streams every AI-bound prompt as it happens. Moments ago, a simulated Singapore bank employee pasted customer records — NRIC numbers, mobile numbers and account details — into a foreign-hosted AI tool. Detection fired on the Singapore identifiers, and the decision was BLOCK: the data never left Singapore. Runtime telemetry on this path is honestly labelled as simulated.
+
+[compliance]
+This is where AI Sentinel is different. That one block becomes violations against the exact controls a Singapore auditor would cite. PDPA section twenty-six: the transfer limitation obligation — personal data leaves Singapore only under legally enforceable obligations of comparable protection. Section twenty-four: reasonable security arrangements. MAS Technology Risk Management Guidelines, paragraph eleven point one point five: prevent and detect unauthorised internet services that carry confidential data. And the PDPC's generative AI guidelines, which make system deployers answerable for prompts, outputs, and agent or tool activity data. Every control is source-cited and carries a visible review gate. No invented clause numbers, ever.
+
+[agents]
+AI security no longer stops at prompts. Autonomous agents touch Jira, GitHub and Salesforce on your behalf. Singapore's CSA now asks system owners to keep a trusted registry of agent identities, and IMDA's agentic framework wants every agent limited to the minimum tools and data it needs. AI Sentinel scores every agent from zero to one hundred. When this agent accessed sensitive data and escalated privileges, its score crossed the threshold — producing exactly one alert, not an alert storm.
+
+[graph]
+For incident response, the risk graph answers the question every data protection officer fears: who exposed sensitive data, to which AI system? The exposure path — user, to prompt, to model, to dataset — resolves in under a second. Under the PDPA, the Commission must be notified within three calendar days once a breach is assessed as notifiable; scoping the incident now takes seconds, not days.
+
+[copilot]
+And when the board asks what happened, the built-in copilot explains any incident in three languages: executive, technical, and compliance — citing the actual violation record and the actual control. It runs fully offline. Your evidence never leaves your environment.
+
+[outro]
+ZealDefense AI Sentinel. Discover. Govern. Secure. Every AI interaction. Real detection. Source-cited Singapore control mappings. Honest labelling. Open source — one docker compose up, and it is running in your estate.
